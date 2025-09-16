@@ -39,7 +39,7 @@ const StudentView: React.FC<StudentViewProps> = ({ setActiveView }) => {
     };
 
     return (
-        <div className="p-8 bg-brand-dark min-h-full">
+        <div className="p-4 md:p-8 bg-brand-dark min-h-full">
             <header className="flex justify-between items-center mb-10">
                 <div className="flex items-center">
                     <div className="w-10 h-10 bg-gradient-to-br from-brand-cyan to-brand-primary rounded-lg flex items-center justify-center font-bold text-white text-sm mr-4">
@@ -54,10 +54,10 @@ const StudentView: React.FC<StudentViewProps> = ({ setActiveView }) => {
             </header>
             
             <div className="text-center mb-16">
-                <h2 className="text-5xl font-extrabold text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-brand-cyan to-brand-secondary">
+                <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-brand-cyan to-brand-secondary">
                     Revolutionary AI-Powered Education
                 </h2>
-                <p className="text-lg text-brand-text-secondary max-w-3xl mx-auto">
+                <p className="text-md md:text-lg text-brand-text-secondary max-w-3xl mx-auto">
                     Empowering neurodiverse learners through adaptive AI agents and personalized educational experiences
                 </p>
                 <p className="text-xs text-brand-text-secondary mt-2">Privacy-by-Design • Echo Project Architecture • AAC Device Optimized</p>
@@ -76,7 +76,7 @@ const StudentView: React.FC<StudentViewProps> = ({ setActiveView }) => {
             </div>
 
             <div className="bg-brand-gray border border-brand-border rounded-lg p-6 mb-16 flex items-center">
-                <LockClosedIcon className="w-8 h-8 text-yellow-400 mr-4"/>
+                <LockClosedIcon className="w-8 h-8 text-yellow-400 mr-4 flex-shrink-0"/>
                 <div>
                     <h4 className="font-bold text-white">Echo Project Privacy Model</h4>
                     <p className="text-sm text-brand-text-secondary">

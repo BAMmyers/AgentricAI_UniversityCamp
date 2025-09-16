@@ -1,8 +1,8 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { PlusIcon, PlayIcon, TrashIcon, CodeBracketIcon, BookOpenIcon, BeakerIcon, GlobeAltIcon, CommandLineIcon, ArrowDownTrayIcon, ArrowUpTrayIcon, EyeIcon, PhotoIcon, ChatBubbleBottomCenterTextIcon, DocumentTextIcon, CpuIcon, SparklesIcon, QuestionMarkCircleIcon, ClipboardDocumentListIcon, DocumentMinusIcon, UserPlusIcon, PencilSquareIcon } from './icons';
+import React, { useState, useCallback, useRef } from 'react';
+// FIX: Added CheckCircleIcon and XCircleIcon to imports, they are now defined in icons.tsx
+import { PlusIcon, PlayIcon, TrashIcon, CodeBracketIcon, BookOpenIcon, BeakerIcon, GlobeAltIcon, CommandLineIcon, ArrowDownTrayIcon, ArrowUpTrayIcon, EyeIcon, PhotoIcon, ChatBubbleBottomCenterTextIcon, DocumentTextIcon, CpuIcon, SparklesIcon, QuestionMarkCircleIcon, ClipboardDocumentListIcon, DocumentMinusIcon, UserPlusIcon, PencilSquareIcon, InformationCircleIcon, XCircleIcon, CheckCircleIcon } from './icons';
 import { View } from '../App';
 import { useAppContext } from '../context/AppContext';
-// FIX: Explicitly import from types/index.ts to resolve module issue.
 import { NodeData, Connection, Point, NodeType, Workflow, Agent } from '../types/index';
 import { generateContent } from '../services/geminiService';
 
@@ -10,7 +10,6 @@ import { generateContent } from '../services/geminiService';
 const NODE_WIDTH = 250;
 const HEADER_HEIGHT = 36;
 const PORT_HEIGHT = 24;
-const PORT_SIZE = 12;
 
 // --- NODE DEFINITIONS ---
 const NODE_TEMPLATES: Record<NodeType, Omit<NodeData, 'id' | 'position'>> = {
@@ -107,11 +106,37 @@ const NodeComponent: React.FC<{ data: NodeData; onNodeMouseDown: (e: React.Mouse
     </div>
 );
 
-const ExecutionLog: React.FC<{logs: string[]}> = ({logs}) => (
-    <div className="absolute bottom-0 left-0 right-0 h-40 bg-brand-gray/80 backdrop-blur-sm border-t border-brand-border z-20 p-2 overflow-y-auto font-mono text-xs">
-        {logs.map((log, i) => <div key={i} className={`${log.startsWith('ERROR') ? 'text-red-400' : 'text-brand-text-secondary'}`}>{`> ${log}`}</div>)}
-    </div>
-);
+interface LogEntry {
+    timestamp: string;
+    message: string;
+    type: 'info' | 'error' | 'success' | 'running';
+}
+
+const ExecutionLog: React.FC<{logs: LogEntry[]}> = ({logs}) => {
+    const logIcons = {
+        info: <InformationCircleIcon className="w-4 h-4 text-brand-text-secondary"/>,
+        error: <XCircleIcon className="w-4 h-4 text-red-400"/>,
+        success: <CheckCircleIcon className="w-4 h-4 text-green-400"/>,
+        running: <CpuIcon className="w-4 h-4 text-yellow-400 animate-spin"/>,
+    };
+    const logColors = {
+        info: 'text-brand-text-secondary',
+        error: 'text-red-400',
+        success: 'text-green-400',
+        running: 'text-yellow-400',
+    };
+    return (
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-brand-gray/80 backdrop-blur-sm border-t border-brand-border z-20 p-2 overflow-y-auto font-mono text-xs">
+            {logs.slice().reverse().map((log, i) => 
+                <div key={i} className={`flex items-start gap-2 ${logColors[log.type]}`}>
+                    <span className="flex-shrink-0 mt-0.5">{logIcons[log.type]}</span>
+                    <span className="flex-shrink-0 text-gray-500">{log.timestamp}</span>
+                    <span className="flex-grow whitespace-pre-wrap">{log.message}</span>
+                </div>
+            )}
+        </div>
+    );
+};
 
 
 // --- STUDIO COMPONENT ---
@@ -126,7 +151,7 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
     const [draggingNode, setDraggingNode] = useState<{ id: string; offset: Point } | null>(null);
     const [drawingConnection, setDrawingConnection] = useState<{ fromNodeId: string; fromOutput: string; fromPosition: Point } | null>(null);
     const [mousePosition, setMousePosition] = useState<Point>({ x: 0, y: 0 });
-    const [executionLogs, setExecutionLogs] = useState<string[]>([]);
+    const [executionLogs, setExecutionLogs] = useState<LogEntry[]>([]);
     const canvasRef = useRef<HTMLDivElement>(null);
 
     const updateWorkflow = (nodes: NodeData[], connections: Connection[]) => {
@@ -164,21 +189,24 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
         const newNodes = activeWorkflow.nodes.map(n => n.id === nodeId ? { ...n, content: { ...n.content, ...content } } : n);
         updateWorkflow(newNodes, activeWorkflow.connections);
     };
+    
+    const log = (message: string, type: LogEntry['type']) => {
+        setExecutionLogs(prev => [{ message, type, timestamp: new Date().toLocaleTimeString() }, ...prev]);
+    };
 
     const runWorkflow = async () => {
-        setExecutionLogs(['Starting workflow execution...']);
+        setExecutionLogs([]);
+        log('Starting workflow execution...', 'info');
         
         let nodesToProcess = activeWorkflow.nodes.filter(n => n.inputs.length === 0);
         const processedNodeIds = new Set<string>();
         let processingQueue = [...nodesToProcess];
     
-        // Reset node statuses and outputs
-        // FIX: Explicitly type `currentNodes` as `NodeData[]` to allow for status changes during execution.
         let currentNodes: NodeData[] = activeWorkflow.nodes.map(n => ({...n, status: 'idle', outputData: undefined}));
         updateWorkflow(currentNodes, activeWorkflow.connections);
 
         const executeNode = async (node: NodeData): Promise<any> => {
-            log(`Executing node: ${node.title}`);
+            log(`Executing node: ${node.title}`, 'running');
             currentNodes = currentNodes.map(n => n.id === node.id ? { ...n, status: 'running' } : n);
             updateWorkflow(currentNodes, activeWorkflow.connections);
 
@@ -190,7 +218,6 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
                     if (!conn) throw new Error(`Input '${inputPort.name}' is not connected.`);
                     const sourceNode = currentNodes.find(n => n.id === conn.fromNodeId);
                     if (!sourceNode || sourceNode.status !== 'success') throw new Error(`Source node '${sourceNode?.title}' for input '${inputPort.name}' has not completed successfully.`);
-                    // Special handling for nested data if needed
                     const sourceOutputData = sourceNode.outputData;
                     const connectedValue = sourceOutputData && typeof sourceOutputData === 'object' ? sourceOutputData[conn.fromOutput] : sourceOutputData;
 
@@ -221,7 +248,7 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
                         outputData = { agentDefinition: JSON.parse(agentJson) };
                         break;
                     case 'imageGenerator':
-                        log('Image generation is not implemented. Using placeholder.');
+                        log('Image generation is not implemented. Using placeholder.', 'info');
                         outputData = { image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' };
                         break;
                     case 'quizGenerator':
@@ -248,16 +275,15 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
                         outputData = inputs.data !== undefined ? inputs.data : inputs.image;
                         break;
                 }
-                 // Handle cases where output is nested
                 const finalOutput = (node.outputs.length === 1 && outputData[node.outputs[0].name]) ? outputData[node.outputs[0].name] : outputData;
                 
-                log(`Node ${node.title} executed successfully.`);
+                log(`Node ${node.title} executed successfully.`, 'success');
                 currentNodes = currentNodes.map(n => n.id === node.id ? { ...n, status: 'success', outputData: finalOutput } : n);
                 updateWorkflow(currentNodes, activeWorkflow.connections);
                 return finalOutput;
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
-                log(`ERROR executing node ${node.title}: ${errorMessage}`);
+                log(`ERROR executing node ${node.title}: ${errorMessage}`, 'error');
                 currentNodes = currentNodes.map(n => n.id === node.id ? { ...n, status: 'error' } : n);
                 updateWorkflow(currentNodes, activeWorkflow.connections);
                 throw error;
@@ -268,31 +294,30 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
             const nodeToRun = processingQueue.shift()!;
             if (processedNodeIds.has(nodeToRun.id)) continue;
             
-            await executeNode(nodeToRun);
-            processedNodeIds.add(nodeToRun.id);
+            try {
+                await executeNode(nodeToRun);
+                processedNodeIds.add(nodeToRun.id);
 
-            // Find next nodes to process
-            const nextNodes = activeWorkflow.connections
-                .filter(c => c.fromNodeId === nodeToRun.id)
-                .map(c => currentNodes.find(n => n.id === c.toNodeId))
-                .filter((n): n is NodeData => !!n);
+                const nextNodes = activeWorkflow.connections
+                    .filter(c => c.fromNodeId === nodeToRun.id)
+                    .map(c => currentNodes.find(n => n.id === c.toNodeId))
+                    .filter((n): n is NodeData => !!n);
 
-            for (const nextNode of nextNodes) {
-                // Check if all inputs for the next node are met
-                const allInputsReady = nextNode.inputs.every(input => {
-                    const conn = activeWorkflow.connections.find(c => c.toNodeId === nextNode.id && c.toInput === input.name);
-                    return conn && processedNodeIds.has(conn.fromNodeId);
-                });
-                if (allInputsReady) {
-                    processingQueue.push(nextNode);
+                for (const nextNode of nextNodes) {
+                    const allInputsReady = nextNode.inputs.every(input => {
+                        const conn = activeWorkflow.connections.find(c => c.toNodeId === nextNode.id && c.toInput === input.name);
+                        return conn && processedNodeIds.has(conn.fromNodeId);
+                    });
+                    if (allInputsReady) {
+                        processingQueue.push(nextNode);
+                    }
                 }
+            } catch (e) {
+                log('Workflow stopped due to an error.', 'error');
+                return;
             }
         }
-        log('Workflow execution finished.');
-    };
-
-    const log = (message: string) => {
-        setExecutionLogs(prev => [...prev, message]);
+        log('Workflow execution finished.', 'success');
     };
 
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -415,24 +440,7 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
     );
 };
 
-
-const NodeLibraryItem: React.FC<{icon: React.ReactNode; title: string; onDragStart: (e: React.DragEvent) => void;}> = ({icon, title, onDragStart}) => (
-    <li onDragStart={onDragStart} draggable className="flex items-center p-2 rounded-md hover:bg-brand-light-gray cursor-grab border border-transparent hover:border-brand-border">
-        {icon}
-        <span className="ml-2">{title}</span>
-    </li>
-);
-
 const NodeLibrary: React.FC<{onAddNode: (type: NodeType) => void}> = ({onAddNode}) => {
-    const handleDragStart = (e: React.DragEvent, type: NodeType) => {
-        e.dataTransfer.setData('application/reactflow', type);
-        e.dataTransfer.effectAllowed = 'move';
-    };
-
-    // Note: A full DnD implementation requires dropping on the canvas. 
-    // For simplicity here, we'll use onClick, but the drag handlers are ready.
-    const nodes = Object.values(NODE_TEMPLATES);
-
     return (
         <div className="w-64 bg-brand-gray p-4 flex flex-col h-full border-r border-brand-border">
             <h2 className="text-lg font-bold text-white mb-4">Node Library</h2>

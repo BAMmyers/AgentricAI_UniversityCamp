@@ -1,5 +1,5 @@
 import React, { createContext, useReducer, useContext, useEffect } from 'react';
-import { Agent, Workflow, ManifestAgent, AppState, Student, ScheduleItem, UpdateStudentGoalsPayload, LogActivityPayload, ShowcasedProject, UpdateStudentProfilePayload } from '../types/index';
+import { Agent, Workflow, ManifestAgent, AppState, Student, ScheduleItem, UpdateStudentGoalsPayload, LogActivityPayload, ShowcasedProject, UpdateStudentProfilePayload, Toast, MissionPlan } from '../types/index';
 import { BookOpenIcon, PaintBrushIcon } from '../components/icons';
 
 type Action =
@@ -18,7 +18,10 @@ type Action =
   | { type: 'UPDATE_STUDENT_GOALS_AND_CURRICULUM'; payload: UpdateStudentGoalsPayload }
   | { type: 'UPDATE_STUDENT_PROFILE'; payload: UpdateStudentProfilePayload }
   | { type: 'LOG_ACTIVITY_COMPLETION'; payload: LogActivityPayload }
-  | { type: 'SHOWCASE_PROJECT'; payload: ShowcasedProject };
+  | { type: 'SHOWCASE_PROJECT'; payload: ShowcasedProject }
+  | { type: 'SHOW_TOAST'; payload: { message: string; type: Toast['type'] } }
+  | { type: 'HIDE_TOAST'; payload: number }
+  | { type: 'SET_MISSION_PLAN'; payload: MissionPlan | null };
 
 const initialState: AppState = {
   agents: [
@@ -46,10 +49,12 @@ const initialState: AppState = {
   ],
   students: [],
   showcasedProjects: [],
+  toasts: [],
   activeAgentId: null,
   activeWorkflowId: 'wf-default-storybook',
   activeStudentId: null,
   missionTeam: [],
+  missionPlan: null,
 };
 
 const appReducer = (state: AppState, action: Action): AppState => {
@@ -63,6 +68,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
             students: loadedState.students || [],
             activeStudentId: loadedState.activeStudentId || null,
             showcasedProjects: loadedState.showcasedProjects || [],
+            toasts: [], // Do not persist toasts
+            missionPlan: null, // Do not persist mission plans
         };
     case 'ADD_AGENT':
         return { ...state, agents: [...state.agents, action.payload] };
@@ -192,6 +199,18 @@ const appReducer = (state: AppState, action: Action): AppState => {
         ...state,
         showcasedProjects: [...state.showcasedProjects, action.payload],
       };
+    case 'SHOW_TOAST':
+      return {
+        ...state,
+        toasts: [...state.toasts, { ...action.payload, id: Date.now() }],
+      };
+    case 'HIDE_TOAST':
+      return {
+        ...state,
+        toasts: state.toasts.filter(t => t.id !== action.payload),
+      };
+    case 'SET_MISSION_PLAN':
+        return { ...state, missionPlan: action.payload };
     default:
       return state;
   }

@@ -6,7 +6,6 @@ import {
     ArrowPathIcon, CommandLineIcon, BookOpenIcon, GlobeAltIcon, PaperAirplaneIcon, BeakerIcon, XMarkIcon, Cog6ToothIcon
 } from './icons';
 import { useAppContext } from '../context/AppContext';
-// FIX: Explicitly import from types/index.ts to resolve module issue.
 import { Agent, ChatMessage, ToolConfig } from '../types/index';
 import { startChatStream } from '../services/geminiService';
 import { View } from '../App';
@@ -84,7 +83,7 @@ const AgentEditor: React.FC<AgentEditorProps> = ({ setActiveView }) => {
         if (agentData.id && agentData.name) {
             const actionType = state.agents.some(a => a.id === agentData.id) ? 'UPDATE_AGENT' : 'ADD_AGENT';
             dispatch({ type: actionType, payload: agentData as Agent });
-            alert('Agent saved successfully!');
+            dispatch({ type: 'SHOW_TOAST', payload: { message: 'Agent saved successfully!', type: 'success' } });
         }
     };
     
@@ -141,7 +140,6 @@ const AgentEditor: React.FC<AgentEditorProps> = ({ setActiveView }) => {
             tools: (prev.tools || []).map(tool => 
                 tool.toolId === toolId 
                     ? { ...tool, settings: { ...tool.settings, [settingKey]: value } }
-                    // ? { ...tool, settings: { ...tool.settings, [settingKey]: type === 'number' ? Number(value) : value } }
                     : tool
             )
         }));

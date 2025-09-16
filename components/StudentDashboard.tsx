@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useState } from 'react';
 import { View } from '../App';
-import { BookOpenIcon, BeakerIcon, MusicalNoteIcon, PaintBrushIcon, ArrowUturnLeftIcon, XMarkIcon, SparklesIcon, LightBulbIcon, TrophyIcon, ArrowPathIcon } from './icons';
+import { ArrowUturnLeftIcon, XMarkIcon, SparklesIcon, TrophyIcon, ArrowPathIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
-import { Agent, Student, Workflow, NodeData, Connection, ScheduleItem, ShowcasedProject } from '../types/index';
+import { Workflow, NodeData, ScheduleItem, ShowcasedProject } from '../types/index';
 import { generateContent } from '../services/geminiService';
+import { useCompanionAgentLogic } from '../hooks/useCompanionAgentLogic';
 
 // --- MODAL FOR ACTIVITY ---
 const ActivityModal: React.FC<{ item: ScheduleItem; content: any; onClose: () => void; isLoading: boolean; onShowcase: () => void; isShowcased: boolean; }> = ({ item, content, onClose, isLoading, onShowcase, isShowcased }) => (
@@ -60,97 +61,13 @@ const StudentDashboard: React.FC<{ setActiveView: (view: View) => void }> = ({ s
     const activeStudent = state.students.find(s => s.id === state.activeStudentId) || null;
     const companionAgent = activeStudent ? state.agents.find(a => a.id === activeStudent.companionAgentId) || null : null;
     
+    // The agent's "brain" is now encapsulated in this custom hook.
+    useCompanionAgentLogic();
+    
     const [activeModalItem, setActiveModalItem] = useState<ScheduleItem | null>(null);
     const [modalContent, setModalContent] = useState<any>(null);
     const [isExecuting, setIsExecuting] = useState(false);
     
-    const scheduleEvolvedForGoals = useRef<string[]>([]);
-    
-    const evolveSchedule = useCallback(async (student: Student, agent: Agent) => {
-        const goalsToProcess = [...student.parentGoals, ...student.teacherCurriculum, ...student.preferences.preferredTopics];
-        if (goalsToProcess.length === 0) return;
-        
-        const newGoals = goalsToProcess.filter(g => !scheduleEvolvedForGoals.current.includes(g));
-        if (newGoals.length === 0) return;
-
-        console.log(`Companion Agent [${agent.name}] is evolving the schedule for Student [${student.id}] based on new stakeholder input...`);
-        
-        const prompt = `
-            An AI tutor needs to create a new learning activity for a student. Synthesize the following data points to propose a new, engaging activity.
-            
-            - Student's Preferences: [${student.preferences.preferredTopics.join(', ')}]
-            - New Goals/Curriculum to Address: [${newGoals.join(', ')}]
-            
-            Based on ALL of the above, devise a single, creative activity. For example, if a parent wants less gaming, a teacher adds a 'game dev' course, and the student likes dinosaurs, you could suggest "Design a Dinosaur-themed Game Level".
-            
-            Respond with ONLY a JSON object with three keys:
-            1. "title": A short, fun title for the activity (e.g., "Dino Game Design").
-            2. "topic": A concise prompt for another AI to generate the activity's content (e.g., "a simple level design document for a 2D platformer game featuring a friendly T-Rex").
-            3. "summary": A one-sentence summary for the parent/teacher log explaining why you created this activity (e.g., "Created a 'Dino Game Design' activity to channel the student's interest in gaming towards the teacher's new game development curriculum.").
-        `;
-        
-        const { text: result } = await generateContent({ prompt, systemInstruction: "You are an expert educational strategist who designs personalized learning plans." });
-
-        try {
-            const newActivity = JSON.parse(result);
-            const newWorkflow: Workflow = {
-                id: `wf-custom-${student.id}-${Date.now()}`, name: newActivity.title, ownerAgentId: agent.id,
-                nodes: [
-                    { id: 'n1', type: 'textInput', title: 'Topic Input', position: { x: 50, y: 100 }, inputs: [], outputs: [{ name: 'text', type: 'string' }], color: 'border-blue-500', content: { text: newActivity.topic } },
-                    { id: 'n2', type: 'storyGenerator', title: 'Generate Content', position: { x: 350, y: 100 }, inputs: [{ name: 'prompt', type: 'string' }], outputs: [{ name: 'story', type: 'string' }], color: 'border-pink-500', content: { systemInstruction: 'You create short, simple, happy educational content for a young learner based on a specific topic.' } }
-                ],
-                connections: [{ fromNodeId: 'n1', fromOutput: 'text', toNodeId: 'n2', toInput: 'prompt' }]
-            };
-            dispatch({ type: 'ADD_WORKFLOW', payload: newWorkflow });
-
-            const newScheduleItem: ScheduleItem = {
-                id: `sched-custom-${Date.now()}`, title: newActivity.title, workflowId: newWorkflow.id, status: 'pending',
-                icon: <SparklesIcon className="w-16 h-16"/>, color: 'bg-gradient-to-br from-purple-500 to-indigo-600',
-                notes: `Suggested for you!`
-            };
-            
-            const currentSchedule = state.students.find(s => s.id === student.id)?.schedule || [];
-            dispatch({ type: 'UPDATE_STUDENT_SCHEDULE', payload: { studentId: student.id, schedule: [...currentSchedule, newScheduleItem] } });
-            scheduleEvolvedForGoals.current.push(...newGoals);
-        } catch (error) {
-            console.error("Failed to parse AI response for schedule evolution:", error, "Response was:", result);
-        }
-    }, [dispatch, state.students]);
-
-    // This effect runs when the student data changes (e.g., from the parent console or adaptation)
-    useEffect(() => {
-        if (activeStudent && companionAgent) {
-            if (activeStudent.schedule.length === 0) { // DAY ONE Experience
-                console.log(`Companion Agent [${companionAgent.name}] is generating the initial "Day One" schedule.`);
-                const storyWorkflow: Workflow = {
-                    id: `wf-story-${activeStudent.id}`, name: "Daily Story Generation", ownerAgentId: companionAgent.id,
-                    nodes: [
-                        { id: 'n1', type: 'textInput', title: 'Topic', position: { x: 50, y: 100 }, inputs: [], outputs: [{name: 'text', type: 'string'}], color: 'border-blue-500', content: {text: `a short, happy story about a ${activeStudent.preferences.preferredTopics[0] || 'friendly robot'}`}},
-                        { id: 'n2', type: 'storyGenerator', title: 'Write Story', position: { x: 350, y: 100 }, inputs: [{name: 'prompt', type: 'string'}], outputs: [{name: 'story', type: 'string'}], color: 'border-pink-500', content: {systemInstruction: 'You write very short, happy stories (2-3 paragraphs) for young children.'}}
-                    ],
-                    connections: [{ fromNodeId: 'n1', fromOutput: 'text', toNodeId: 'n2', toInput: 'prompt' }]
-                };
-                const artWorkflow: Workflow = {
-                    id: `wf-art-${activeStudent.id}`, name: "Art Idea Generation", ownerAgentId: companionAgent.id,
-                     nodes: [
-                        { id: 'n1', type: 'textInput', title: 'Topic', position: { x: 50, y: 100 }, inputs: [], outputs: [{name: 'text', type: 'string'}], color: 'border-blue-500', content: {text: `a fun, simple drawing idea involving ${activeStudent.preferences.preferredTopics[1] || 'stars and planets'}`}},
-                        { id: 'n2', type: 'storyGenerator', title: 'Generate Idea', position: { x: 350, y: 100 }, inputs: [{name: 'prompt', type: 'string'}], outputs: [{name: 'story', type: 'string'}], color: 'border-teal-500', content: {systemInstruction: 'You give a single, simple, fun drawing prompt for a child.'}}
-                    ],
-                    connections: [{ fromNodeId: 'n1', fromOutput: 'text', toNodeId: 'n2', toInput: 'prompt' }]
-                };
-                dispatch({ type: 'ADD_WORKFLOW', payload: storyWorkflow });
-                dispatch({ type: 'ADD_WORKFLOW', payload: artWorkflow });
-                const initialSchedule: ScheduleItem[] = [
-                    { id: 'sched1', title: "Today's Story", workflowId: storyWorkflow.id, status: 'pending', icon: <BookOpenIcon className="w-16 h-16" />, color: 'bg-gradient-to-br from-blue-500 to-cyan-500' },
-                    { id: 'sched2', title: 'Art Idea', workflowId: artWorkflow.id, status: 'pending', icon: <PaintBrushIcon className="w-16 h-16" />, color: 'bg-gradient-to-br from-red-500 to-orange-500' },
-                ];
-                dispatch({ type: 'UPDATE_STUDENT_SCHEDULE', payload: { studentId: activeStudent.id, schedule: initialSchedule } });
-            } else { // Evolve schedule based on goals
-                evolveSchedule(activeStudent, companionAgent);
-            }
-        }
-    }, [activeStudent, companionAgent, dispatch, evolveSchedule]);
-
     const executeWorkflow = async (workflow: Workflow): Promise<any> => {
         const nodeOutputs: Record<string, any> = {};
         let processingQueue: NodeData[] = workflow.nodes.filter(n => n.inputs.length === 0);
@@ -204,9 +121,6 @@ const StudentDashboard: React.FC<{ setActiveView: (view: View) => void }> = ({ s
     const handleActivityClick = async (item: ScheduleItem) => {
         if (item.status === 'completed') {
             setActiveModalItem(item);
-            const workflow = state.workflows.find(wf => wf.id === item.workflowId);
-             // For completed items, we don't have the last output stored. A real app would store this.
-             // For the demo, we'll show a generic completion message.
             setModalContent(`You've completed this activity! Great job.`);
             return;
         }
@@ -252,7 +166,10 @@ const StudentDashboard: React.FC<{ setActiveView: (view: View) => void }> = ({ s
             type: 'UPDATE_STUDENT_PROFILE',
             payload: { studentId: activeStudent.id, preferences: newPreferences }
         });
-        alert(`Agent has "observed" a new interest in ${newPref} and will adapt the schedule!`);
+        dispatch({
+            type: 'SHOW_TOAST',
+            payload: { message: `Agent has "observed" a new interest in ${newPref} and will adapt the schedule!`, type: 'info' }
+        });
     }
 
     const handleShowcase = () => {
@@ -261,6 +178,7 @@ const StudentDashboard: React.FC<{ setActiveView: (view: View) => void }> = ({ s
             id: activeModalItem.id, title: activeModalItem.title, content: modalContent, companionAgentId: companionAgent.id,
         };
         dispatch({ type: 'SHOWCASE_PROJECT', payload: project });
+        dispatch({ type: 'SHOW_TOAST', payload: { message: 'Project added to the showcase!', type: 'success' } });
         setActiveModalItem(null);
     };
     
@@ -280,11 +198,11 @@ const StudentDashboard: React.FC<{ setActiveView: (view: View) => void }> = ({ s
                     <p className="text-brand-text-secondary">Here is your plan for today. Let's learn something new!</p>
                 </div>
                  <div className="flex items-center gap-4">
-                    <button onClick={handleObserveAndAdapt} title="Simulate agent learning from interaction" className="flex items-center gap-2 bg-brand-light-gray px-4 py-2 rounded-lg text-brand-secondary hover:text-white">
+                    <button onClick={handleObserveAndAdapt} title="Simulate agent learning from interaction" className="flex items-center gap-2 bg-brand-light-gray px-4 py-2 rounded-lg text-brand-secondary hover:text-white transition-colors duration-200">
                         <ArrowPathIcon className="w-5 h-5"/>
                         <span className="text-sm">Agent: Observe & Adapt</span>
                     </button>
-                    <button onClick={() => setActiveView('university')} className="flex items-center gap-2 bg-brand-gray px-4 py-2 rounded-lg hover:bg-brand-light-gray">
+                    <button onClick={() => setActiveView('university')} className="flex items-center gap-2 bg-brand-gray px-4 py-2 rounded-lg hover:bg-brand-light-gray transition-colors duration-200">
                         <ArrowUturnLeftIcon className="w-5 h-5" />
                         <span className="text-sm">Exit</span>
                     </button>

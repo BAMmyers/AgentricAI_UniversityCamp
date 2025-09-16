@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { manifestAgents } from '../core/agentManifest';
-// FIX: Explicitly import from types/index.ts to resolve module and type inference issues.
-import { ManifestAgent } from '../types/index';
+import { ManifestAgent, MissionPlan } from '../types/index';
 import { useAppContext } from '../context/AppContext';
-import { PlusIcon, MinusCircleIcon } from './icons';
+import { PlusIcon, MinusCircleIcon, PaperAirplaneIcon, SparklesIcon } from './icons';
+import { generateContent } from '../services/geminiService';
 
 const CoreView: React.FC = () => {
     const { state, dispatch } = useAppContext();
+    const [objective, setObjective] = useState('');
+    const [isPlanning, setIsPlanning] = useState(false);
 
     const groupedAgents = manifestAgents.reduce((acc, agent) => {
         const category = agent.category || 'Uncategorized';
@@ -23,6 +25,42 @@ const CoreView: React.FC = () => {
 
     const handleRemoveAgent = (agentId: string) => {
         dispatch({ type: 'REMOVE_AGENT_FROM_TEAM', payload: agentId });
+    };
+    
+    const handleGeneratePlan = async () => {
+        if (!objective.trim() || state.missionTeam.length === 0) {
+            alert('Please enter an objective and assemble a team.');
+            return;
+        }
+        setIsPlanning(true);
+        dispatch({ type: 'SET_MISSION_PLAN', payload: null });
+
+        const teamDetails = state.missionTeam.map(a => `- ${a.name}: ${a.role}`).join('\n');
+        const prompt = `
+            You are Orchestrator Alpha, an expert AI mission planner. Your task is to create a detailed, step-by-step mission plan to achieve a user's objective using a designated team of specialized agents.
+
+            **Objective:** "${objective}"
+
+            **Available Team:**
+            ${teamDetails}
+
+            Analyze the team's capabilities and the objective. Break the objective down into a logical sequence of actions. For each step, assign the most appropriate agent from the team.
+
+            Respond with ONLY a JSON object with two keys:
+            1. "overview": A brief, one-sentence summary of the overall mission strategy.
+            2. "steps": An array of objects, where each object has the keys "step" (number), "agent" (the name of the assigned agent), "action" (a concise verb-based description of the task, e.g., "Analyze financial data"), and "objective" (a detailed description of what this step aims to accomplish).
+        `;
+
+        const { text } = await generateContent({ prompt });
+        setIsPlanning(false);
+
+        try {
+            const plan: MissionPlan = JSON.parse(text);
+            dispatch({ type: 'SET_MISSION_PLAN', payload: plan });
+        } catch (e) {
+            console.error("Failed to parse mission plan:", e);
+            alert("The Orchestrator AI failed to generate a valid plan. Please try refining your objective.");
+        }
     };
 
     return (
@@ -59,17 +97,47 @@ const CoreView: React.FC = () => {
             {/* Middle Panel: Mission Control */}
             <div className="flex-1 p-6 flex flex-col">
                 <h2 className="text-lg font-bold text-white mb-4">Mission Control</h2>
-                <div className="flex-grow bg-brand-gray border border-brand-border rounded-md p-4 flex flex-col">
-                    <div className="text-sm text-brand-text-secondary">AgentricAI Core OS Initialized. Assemble your team and define your mission objective.</div>
-                    {/* Mission log or chat would go here */}
+                <div className="flex-grow bg-brand-gray border border-brand-border rounded-md p-4 flex flex-col overflow-hidden">
+                    {isPlanning ? (
+                        <div className="flex-grow flex items-center justify-center text-center text-brand-text-secondary">
+                            <div>
+                                <SparklesIcon className="w-12 h-12 mx-auto text-brand-cyan animate-pulse"/>
+                                <p className="mt-2">Orchestrator Alpha is analyzing the objective and generating a mission plan...</p>
+                            </div>
+                        </div>
+                    ) : state.missionPlan ? (
+                         <div className="flex-grow overflow-y-auto">
+                            <h3 className="font-bold text-white">Mission Overview:</h3>
+                            <p className="text-sm text-brand-text-secondary italic mb-4">{state.missionPlan.overview}</p>
+                            <div className="space-y-3">
+                                {state.missionPlan.steps.map(step => (
+                                    <div key={step.step} className="bg-brand-dark p-3 rounded-lg border border-brand-border">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="font-semibold text-brand-cyan">Step {step.step}: {step.action}</h4>
+                                            <span className="text-xs font-mono bg-brand-light-gray px-2 py-1 rounded">{step.agent}</span>
+                                        </div>
+                                        <p className="text-sm text-brand-text-secondary mt-1">{step.objective}</p>
+                                    </div>
+                                ))}
+                            </div>
+                         </div>
+                    ) : (
+                         <div className="text-sm text-brand-text-secondary">AgentricAI Core OS Initialized. Assemble your team and define your mission objective.</div>
+                    )}
                 </div>
-                <div className="mt-4">
+                <form onSubmit={(e) => { e.preventDefault(); handleGeneratePlan(); }} className="mt-4 flex gap-2">
                     <input 
                         type="text" 
-                        placeholder="Enter objective..."
+                        value={objective}
+                        onChange={e => setObjective(e.target.value)}
+                        placeholder="Enter mission objective..."
                         className="w-full bg-brand-light-gray border border-brand-border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
                     />
-                </div>
+                    <button type="submit" disabled={isPlanning} className="bg-brand-primary hover:bg-brand-accent text-white px-4 py-2 rounded-md flex items-center gap-2 disabled:bg-brand-text-secondary">
+                        <PaperAirplaneIcon className="w-5 h-5" />
+                        <span>Plan</span>
+                    </button>
+                </form>
             </div>
 
             {/* Right Panel: Team Status */}

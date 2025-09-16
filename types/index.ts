@@ -159,13 +159,33 @@ export interface ShowcasedProject {
     companionAgentId: string;
 }
 
+export interface Toast {
+  id: number;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
+export interface MissionStep {
+    step: number;
+    agent: string;
+    action: string;
+    objective: string;
+}
+
+export interface MissionPlan {
+    overview: string;
+    steps: MissionStep[];
+}
+
 export interface AppState {
   agents: Agent[];
   workflows: Workflow[];
   students: Student[];
   showcasedProjects: ShowcasedProject[];
+  toasts: Toast[];
   activeAgentId: string | null;
   activeWorkflowId: string | null;
   activeStudentId: string | null;
   missionTeam: ManifestAgent[];
+  missionPlan: MissionPlan | null;
 }

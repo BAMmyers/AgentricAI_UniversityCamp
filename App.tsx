@@ -10,6 +10,7 @@ import StudentRoster from './components/StudentRoster';
 import ParentTeacherConsole from './components/ParentTeacherConsole';
 import ShowcaseView from './components/ShowcaseView';
 import { ChatWidget } from './components/ChatWidget';
+import ToastContainer from './components/Toast';
 import { BrainCircuitIcon, LayoutDashboardIcon, Cog8ToothIcon, AcademicCapIcon, CubeTransparentIcon, ServerStackIcon, UserGroupIcon, TrophyIcon } from './components/icons';
 
 export type View = 'dashboard' | 'studio' | 'agent-editor' | 'university' | 'student-dashboard' | 'core' | 'gateway' | 'student-roster' | 'parent-teacher-console' | 'showcase';
@@ -95,6 +96,7 @@ const App: React.FC = () => {
       </main>
 
       <ChatWidget />
+      <ToastContainer />
     </div>
   );
 };
