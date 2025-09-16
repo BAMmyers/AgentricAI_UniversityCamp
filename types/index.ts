@@ -107,18 +107,63 @@ export interface ScheduleItem {
     icon: React.ReactNode;
     color: string;
     status: 'pending' | 'in-progress' | 'completed';
+    notes?: string; // Note from the agent about why this was added/modified
+    review?: string; // Agent's constructive feedback after completion
+}
+
+export interface ActivityLogEntry {
+    timestamp: string;
+    summary: string; // Agent-generated summary of the activity
+    scheduleItemId: string;
 }
 
 export interface Student {
     id: string;
     companionAgentId: string;
     schedule: ScheduleItem[];
+    preferences: {
+        preferredTopics: string[];
+        learningStyle: 'visual' | 'auditory' | 'kinesthetic';
+    };
+    // Inputs from external stakeholders
+    parentGoals: string[];
+    teacherCurriculum: string[];
+    // Agent-curated log for external review
+    activityLog: ActivityLogEntry[];
+}
+
+export interface UpdateStudentGoalsPayload {
+    studentId: string;
+    parentGoals: string[];
+    teacherCurriculum: string[];
+}
+
+export interface UpdateStudentProfilePayload {
+    studentId: string;
+    preferences: Student['preferences'];
+    learningGoals?: string[]; // Kept this generic for future use
+}
+
+
+export interface LogActivityPayload {
+    studentId: string;
+    scheduleItemId: string;
+    summary: string;
+    review: string;
+}
+
+export interface ShowcasedProject {
+    id: string; // scheduleItem.id can be used for uniqueness
+    title: string;
+    content: any;
+    companionAgentId: string;
 }
 
 export interface AppState {
   agents: Agent[];
   workflows: Workflow[];
   students: Student[];
+  showcasedProjects: ShowcasedProject[];
   activeAgentId: string | null;
   activeWorkflowId: string | null;
   activeStudentId: string | null;

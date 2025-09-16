@@ -3,6 +3,22 @@ import React from 'react';
 // Generic Icon Props
 type IconProps = React.SVGProps<SVGSVGElement>;
 
+export const TrophyIcon: React.FC<IconProps> = (props) => (
+    <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9a9.75 9.75 0 0 1 9 0Zm0 0c1.516 0 2.964-.224 4.31-.639a.75.75 0 0 0 .52-1.033 3.75 3.75 0 0 0-8.32 0 .75.75 0 0 0 .52 1.033c1.346.415 2.794.64 4.31.64ZM9.816 15.75a3.75 3.75 0 0 1 4.368 0" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1.5m0 12.75v1.5m6-11.25-1.06.61a.75.75 0 0 1-1.082-.02L12 3m-3.938 3.84-1.06-.61a.75.75 0 0 0-1.082.02L3 7.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a9 9 0 0 1 9 9h-1.5a7.5 7.5 0 0 0-15 0H3a9 9 0 0 1 9-9Z" />
+    </svg>
+);
+
+
+export const ClipboardDocumentCheckIcon: React.FC<IconProps> = (props) => (
+    <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" />
+    </svg>
+);
+
+
 export const SignalIcon: React.FC<IconProps> = (props) => (
     <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.25V18a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 18V8.25m-18 0V6a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 6v2.25m-18 0h18M5.25 6h.008v.008H5.25V6Zm.75 0h.008v.008h-.008V6Zm.75 0h.008v.008h-.008V6Z" />

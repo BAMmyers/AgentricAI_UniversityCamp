@@ -1,5 +1,5 @@
 import React, { createContext, useReducer, useContext, useEffect } from 'react';
-import { Agent, Workflow, ManifestAgent, AppState, Student, ScheduleItem } from '../types/index';
+import { Agent, Workflow, ManifestAgent, AppState, Student, ScheduleItem, UpdateStudentGoalsPayload, LogActivityPayload, ShowcasedProject, UpdateStudentProfilePayload } from '../types/index';
 import { BookOpenIcon, PaintBrushIcon } from '../components/icons';
 
 type Action =
@@ -14,7 +14,11 @@ type Action =
   | { type: 'ENROLL_STUDENT' }
   | { type: 'SET_ACTIVE_STUDENT_ID'; payload: string | null }
   | { type: 'ADD_WORKFLOW'; payload: Workflow }
-  | { type: 'UPDATE_STUDENT_SCHEDULE'; payload: { studentId: string; schedule: ScheduleItem[] } };
+  | { type: 'UPDATE_STUDENT_SCHEDULE'; payload: { studentId: string; schedule: ScheduleItem[] } }
+  | { type: 'UPDATE_STUDENT_GOALS_AND_CURRICULUM'; payload: UpdateStudentGoalsPayload }
+  | { type: 'UPDATE_STUDENT_PROFILE'; payload: UpdateStudentProfilePayload }
+  | { type: 'LOG_ACTIVITY_COMPLETION'; payload: LogActivityPayload }
+  | { type: 'SHOWCASE_PROJECT'; payload: ShowcasedProject };
 
 const initialState: AppState = {
   agents: [
@@ -41,6 +45,7 @@ const initialState: AppState = {
     }
   ],
   students: [],
+  showcasedProjects: [],
   activeAgentId: null,
   activeWorkflowId: 'wf-default-storybook',
   activeStudentId: null,
@@ -57,6 +62,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
             ...loadedState,
             students: loadedState.students || [],
             activeStudentId: loadedState.activeStudentId || null,
+            showcasedProjects: loadedState.showcasedProjects || [],
         };
     case 'ADD_AGENT':
         return { ...state, agents: [...state.agents, action.payload] };
@@ -70,6 +76,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'SET_ACTIVE_AGENT_ID':
         return { ...state, activeAgentId: action.payload };
     case 'ADD_WORKFLOW':
+        // Prevent duplicate workflows
+        if (state.workflows.some(wf => wf.id === action.payload.id)) return state;
         return { ...state, workflows: [...state.workflows, action.payload] };
     case 'UPDATE_WORKFLOW':
         return {
@@ -92,7 +100,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
 
         const newCompanionAgent: Agent = {
             id: companionAgentId,
-            name: `Companion Agent for ${studentId.slice(-4)}`,
+            name: `Companion Agent ${studentId.slice(-4)}`,
             identity: 'Tutor',
             model: 'gemini-2.5-flash',
             type: 'Companion',
@@ -106,6 +114,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
             id: studentId,
             companionAgentId: companionAgentId,
             schedule: [],
+            preferences: {
+                preferredTopics: ['dinosaurs', 'space travel'],
+                learningStyle: 'visual',
+            },
+            parentGoals: [],
+            teacherCurriculum: [],
+            activityLog: [],
         };
 
         return {
@@ -124,6 +139,59 @@ const appReducer = (state: AppState, action: Action): AppState => {
                 s.id === action.payload.studentId ? { ...s, schedule: action.payload.schedule } : s
             )
         };
+    case 'UPDATE_STUDENT_GOALS_AND_CURRICULUM':
+        return {
+            ...state,
+            students: state.students.map(s => 
+                s.id === action.payload.studentId 
+                    ? { 
+                        ...s, 
+                        parentGoals: action.payload.parentGoals,
+                        teacherCurriculum: action.payload.teacherCurriculum,
+                      } 
+                    : s
+            )
+        };
+     case 'UPDATE_STUDENT_PROFILE':
+        return {
+            ...state,
+            students: state.students.map(s => 
+                s.id === action.payload.studentId 
+                    ? { ...s, preferences: action.payload.preferences }
+                    : s
+            )
+        };
+    case 'LOG_ACTIVITY_COMPLETION':
+        return {
+            ...state,
+            students: state.students.map(s => {
+                if (s.id !== action.payload.studentId) return s;
+                return {
+                    ...s,
+                    schedule: s.schedule.map(item => 
+                        item.id === action.payload.scheduleItemId 
+                            ? { ...item, status: 'completed', review: action.payload.review } 
+                            : item
+                    ),
+                    activityLog: [
+                        ...s.activityLog,
+                        {
+                            timestamp: new Date().toISOString(),
+                            summary: action.payload.summary,
+                            scheduleItemId: action.payload.scheduleItemId,
+                        }
+                    ]
+                };
+            })
+        };
+    case 'SHOWCASE_PROJECT':
+      if (state.showcasedProjects.some(p => p.id === action.payload.id)) {
+        return state; // Avoid duplicates
+      }
+      return {
+        ...state,
+        showcasedProjects: [...state.showcasedProjects, action.payload],
+      };
     default:
       return state;
   }

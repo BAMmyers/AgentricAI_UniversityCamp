@@ -7,23 +7,33 @@ import StudentDashboard from './components/StudentDashboard';
 import CoreView from './components/CoreView';
 import GatewayView from './components/GatewayView';
 import StudentRoster from './components/StudentRoster';
+import ParentTeacherConsole from './components/ParentTeacherConsole';
+import ShowcaseView from './components/ShowcaseView';
 import { ChatWidget } from './components/ChatWidget';
-import { BrainCircuitIcon, LayoutDashboardIcon, Cog8ToothIcon, AcademicCapIcon, CubeTransparentIcon, ServerStackIcon, UserGroupIcon } from './components/icons';
+import { BrainCircuitIcon, LayoutDashboardIcon, Cog8ToothIcon, AcademicCapIcon, CubeTransparentIcon, ServerStackIcon, UserGroupIcon, TrophyIcon } from './components/icons';
 
-export type View = 'dashboard' | 'studio' | 'agent-editor' | 'university' | 'student-dashboard' | 'core' | 'gateway' | 'student-roster';
+export type View = 'dashboard' | 'studio' | 'agent-editor' | 'university' | 'student-dashboard' | 'core' | 'gateway' | 'student-roster' | 'parent-teacher-console' | 'showcase';
 
 const App: React.FC = () => {
   const [activeView, setActiveView] = useState<View>('university');
+  const [activeStudentIdForConsole, setActiveStudentIdForConsole] = useState<string | null>(null);
+
 
   const navItems = [
     { id: 'university', label: 'University', icon: <AcademicCapIcon className="w-5 h-5" /> },
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboardIcon className="w-5 h-5" /> },
-    { id: 'student-roster', label: 'Student Roster', icon: <UserGroupIcon className="w-5 h-5" /> },
+    { id: 'student-roster', label: 'Companion Agent Roster', icon: <UserGroupIcon className="w-5 h-5" /> },
+    { id: 'showcase', label: 'Project Showcase', icon: <TrophyIcon className="w-5 h-5" /> },
     { id: 'core', label: 'Core OS', icon: <CubeTransparentIcon className="w-5 h-5" /> },
     { id: 'studio', label: 'Studio', icon: <BrainCircuitIcon className="w-5 h-5" /> },
     { id: 'agent-editor', label: 'Agent Editor', icon: <Cog8ToothIcon className="w-5 h-5" /> },
     { id: 'gateway', label: 'Gateway Console', icon: <ServerStackIcon className="w-5 h-5" /> },
   ];
+
+  const navigateToConsole = (studentId: string) => {
+    setActiveStudentIdForConsole(studentId);
+    setActiveView('parent-teacher-console');
+  }
 
   const renderView = () => {
     switch (activeView) {
@@ -42,7 +52,11 @@ const App: React.FC = () => {
       case 'gateway':
         return <GatewayView />;
       case 'student-roster':
-        return <StudentRoster />;
+        return <StudentRoster navigateToConsole={navigateToConsole} />;
+      case 'parent-teacher-console':
+        return activeStudentIdForConsole ? <ParentTeacherConsole studentId={activeStudentIdForConsole} setActiveView={setActiveView} /> : <StudentRoster navigateToConsole={navigateToConsole} />;
+      case 'showcase':
+        return <ShowcaseView />;
       default:
         return <StudentView setActiveView={setActiveView} />;
     }
@@ -64,7 +78,9 @@ const App: React.FC = () => {
               key={item.id}
               onClick={() => setActiveView(item.id as View)}
               className={`p-3 rounded-lg transition-colors duration-200 ${
-                activeView === item.id ? 'bg-brand-accent text-white' : 'text-brand-text-secondary hover:bg-brand-light-gray hover:text-white'
+                activeView === item.id || (activeView === 'parent-teacher-console' && item.id === 'student-roster')
+                  ? 'bg-brand-accent text-white' 
+                  : 'text-brand-text-secondary hover:bg-brand-light-gray hover:text-white'
               }`}
               title={item.label}
             >

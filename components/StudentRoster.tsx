@@ -2,7 +2,11 @@ import React from 'react';
 import { useAppContext } from '../context/AppContext';
 import { UserCircleIcon, SignalIcon } from './icons';
 
-const StudentRoster: React.FC = () => {
+interface StudentRosterProps {
+    navigateToConsole: (studentId: string) => void;
+}
+
+const StudentRoster: React.FC<StudentRosterProps> = ({ navigateToConsole }) => {
     const { state } = useAppContext();
     const { students, agents } = state;
 
@@ -11,8 +15,8 @@ const StudentRoster: React.FC = () => {
             <header className="flex items-center mb-6">
                 <UserCircleIcon className="w-8 h-8 mr-3 text-brand-cyan" />
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Student Roster</h1>
-                    <p className="text-brand-text-secondary">Monitor enrolled students and their companion agents.</p>
+                    <h1 className="text-2xl font-bold text-white">Companion Agent Roster</h1>
+                    <p className="text-brand-text-secondary">Monitor enrolled students via their secure companion agents.</p>
                 </div>
             </header>
 
@@ -27,7 +31,11 @@ const StudentRoster: React.FC = () => {
                         if (!companionAgent) return null;
 
                         return (
-                            <div key={student.id} className="bg-brand-gray border border-brand-border rounded-lg p-4">
+                            <div 
+                                key={student.id} 
+                                onClick={() => navigateToConsole(student.id)}
+                                className="bg-brand-gray border border-brand-border rounded-lg p-4 cursor-pointer hover:border-brand-primary transition-colors"
+                            >
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <h2 className="font-bold text-white truncate">{companionAgent.name}</h2>
@@ -47,9 +55,9 @@ const StudentRoster: React.FC = () => {
                                         <span className="text-brand-text-secondary">Engagement:</span>
                                         <span className="font-semibold text-green-400">High</span>
                                     </div>
-                                    <div className="flex justify-between">
+                                    <div className="flex justify-between items-center">
                                         <span className="text-brand-text-secondary">Progress:</span>
-                                        <div className="w-1/2 bg-brand-dark rounded-full h-2 mt-1.5">
+                                        <div className="w-1/2 bg-brand-dark rounded-full h-2">
                                             <div className="bg-brand-primary h-2 rounded-full" style={{ width: '75%' }}></div>
                                         </div>
                                     </div>
