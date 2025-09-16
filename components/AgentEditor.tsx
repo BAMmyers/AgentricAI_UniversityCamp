@@ -3,12 +3,11 @@ import {
     PlusIcon, BellIcon, VariableIcon, Squares2X2Icon, PlusCircleIcon,
     ArrowUpOnSquareIcon, UserCircleIcon, InformationCircleIcon,
     IdentificationIcon, LightBulbIcon, DocumentMagnifyingGlassIcon,
-    ArrowPathIcon, CommandLineIcon, BookOpenIcon, GlobeAltIcon, PaperAirplaneIcon, BeakerIcon, XMarkIcon, Cog6ToothIcon
+    ArrowPathIcon, CommandLineIcon, BookOpenIcon, GlobeAltIcon, PaperAirplaneIcon, BeakerIcon, XMarkIcon, Cog6ToothIcon, SparklesIcon, StarIcon
 } from './icons';
 import { useAppContext } from '../context/AppContext';
-import { Agent, ChatMessage, ToolConfig } from '../types/index';
-import { startChatStream } from '../services/geminiService';
-import { View } from '../App';
+import { Agent, ChatMessage, ToolConfig, SubscriptionPlan } from '../types/index';
+import { startChatStream, generateContent } from '../services/geminiService';
 import { AVAILABLE_TOOLS } from '../core/tools';
 
 const SectionHeader: React.FC<{ title: string; children?: React.ReactNode; }> = ({ title, children }) => (
@@ -27,42 +26,49 @@ const FormField: React.FC<{ label: string; children: React.ReactNode; }> = ({ la
 
 const MarkdownPreview: React.FC<{ content: string }> = ({ content }) => {
   const formatText = (text: string) => {
-    const formattedText = text
+    // Escape HTML to prevent injection before applying markdown
+    const escapedText = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    const formattedText = escapedText
       .replace(/\*\*(.*?)\*\*/g, '<strong class="text-brand-secondary">$1</strong>') // Bold
       .replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italic
-    return { __html: formattedText };
+      
+    return { __html: formattedText.replace(/\n/g, '<br />') }; // Also handle newlines
   };
 
-  return <div className="p-2 text-xs bg-brand-light-gray border border-brand-border rounded-md prose prose-sm prose-invert h-[192px] whitespace-pre-wrap" dangerouslySetInnerHTML={formatText(content)} />;
+  return <div className="p-3 text-sm bg-brand-dark border border-brand-border rounded-md prose prose-sm prose-invert h-[192px] overflow-y-auto whitespace-pre-wrap" dangerouslySetInnerHTML={formatText(content)} />;
 };
 
-interface AgentEditorProps {
-    setActiveView: (view: View) => void;
-}
-
-const AgentEditor: React.FC<AgentEditorProps> = ({ setActiveView }) => {
+const AgentEditor: React.FC = () => {
     const { state, dispatch } = useAppContext();
     const activeAgent = state.agents.find(a => a.id === state.activeAgentId);
+    const subscriptionPlan = state.currentUser?.subscriptionPlan || 'free';
     
-    const [agentData, setAgentData] = useState<Partial<Agent>>(activeAgent || { model: 'gemini-2.5-flash', name: 'New Agent', tools: [], coreMemory: [] });
+    const [agentData, setAgentData] = useState<Partial<Agent>>(activeAgent || { model: 'gemini-standard', name: 'New Agent', tools: [], coreMemory: [], personality: { tone: 'professional', creativity: 'medium', verbosity: 'balanced' } });
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const [chatInput, setChatInput] = useState('');
     const [isLoadingChat, setIsLoadingChat] = useState(false);
+    const [isGeneratingPersona, setIsGeneratingPersona] = useState(false);
     const [isToolSelectorOpen, setIsToolSelectorOpen] = useState(false);
     const [instructionMode, setInstructionMode] = useState<'edit' | 'preview'>('edit');
     const [expandedTool, setExpandedTool] = useState<string | null>(null);
     const toolSelectorRef = useRef<HTMLDivElement>(null);
 
-
     useEffect(() => {
         const agentToLoad = activeAgent || { 
-            model: 'gemini-2.5-flash', 
+            model: 'gemini-standard', 
             name: 'New Agent', 
             id: `agent-${Date.now()}`,
             tools: [],
             coreMemory: [],
             systemInstruction: '',
             identity: '',
+            personality: { tone: 'professional', creativity: 'medium', verbosity: 'balanced' },
         };
         setAgentData(agentToLoad);
         setChatMessages([]);
@@ -87,6 +93,33 @@ const AgentEditor: React.FC<AgentEditorProps> = ({ setActiveView }) => {
         }
     };
     
+    const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedModel = e.target.value;
+        if (selectedModel === 'gemini-2.5-flash' && subscriptionPlan === 'free') {
+            dispatch({ type: 'SHOW_TOAST', payload: { message: 'Upgrade to Pro to use premium models!', type: 'info' } });
+            return;
+        }
+        setAgentData({ ...agentData, model: selectedModel });
+    };
+
+    const handleGeneratePersona = async () => {
+        setIsGeneratingPersona(true);
+        const p = agentData.personality;
+        const prompt = `
+            Generate a detailed system instruction (persona) for an AI agent based on the following high-level traits. The instruction should be comprehensive, written in the second person (e.g., "You are..."), and encapsulate the desired behavior.
+
+            - Tone: ${p?.tone}
+            - Creativity Level: ${p?.creativity}
+            - Verbosity: ${p?.verbosity}
+
+            Based on these traits, write a detailed persona.
+        `;
+
+        const { text } = await generateContent({ prompt });
+        setAgentData({ ...agentData, systemInstruction: text });
+        setIsGeneratingPersona(false);
+    };
+
     const handleChatSend = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!chatInput.trim() || isLoadingChat || !agentData.systemInstruction) return;
@@ -137,13 +170,21 @@ const AgentEditor: React.FC<AgentEditorProps> = ({ setActiveView }) => {
     const handleToolSettingChange = (toolId: string, settingKey: string, value: string | number | boolean) => {
         setAgentData(prev => ({
             ...prev,
-            tools: (prev.tools || []).map(tool => 
-                tool.toolId === toolId 
-                    ? { ...tool, settings: { ...tool.settings, [settingKey]: value } }
-                    : tool
-            )
+            tools: (prev.tools || []).map(tool => {
+                if (tool.toolId === toolId) {
+                    return {
+                        ...tool,
+                        settings: {
+                            ...tool.settings,
+                            [settingKey]: value
+                        }
+                    };
+                }
+                return tool;
+            })
         }));
     };
+
 
     if (!agentData) {
         return <div className="p-4">No Agent Selected or New Agent not Initialized.</div>
@@ -170,19 +211,49 @@ const AgentEditor: React.FC<AgentEditorProps> = ({ setActiveView }) => {
                     <input type="text" value={agentData.identity || ''} onChange={e => setAgentData({...agentData, identity: e.target.value})} className="w-full bg-brand-light-gray border border-brand-border rounded-md px-2 py-1.5 text-sm" />
                 </FormField>
                 <FormField label="Model">
-                    <select value={agentData.model} onChange={e => setAgentData({...agentData, model: e.target.value})} className="w-full bg-brand-light-gray border border-brand-border rounded-md px-2 py-1.5 text-sm appearance-none">
-                        <option>gemini-2.5-flash</option>
+                    <select value={agentData.model} onChange={handleModelChange} className="w-full bg-brand-light-gray border border-brand-border rounded-md px-2 py-1.5 text-sm appearance-none">
+                        <option value="gemini-standard">Standard (Free)</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Premium)</option>
                     </select>
                 </FormField>
                 <div className="border-t border-brand-border my-4"></div>
                 <SectionHeader title="Reasoning" />
+
+                <div className="bg-brand-dark border border-brand-border rounded-md p-3 mb-4">
+                    <h4 className="font-semibold text-sm mb-3">Personality</h4>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div>
+                            <label className="text-brand-text-secondary block mb-1">Tone</label>
+                            <select value={agentData.personality?.tone} onChange={e => setAgentData({...agentData, personality: {...agentData.personality!, tone: e.target.value as any}})} className="w-full bg-brand-light-gray border border-brand-border rounded px-2 py-1">
+                                <option>professional</option><option>casual</option><option>playful</option><option>formal</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-brand-text-secondary block mb-1">Creativity</label>
+                            <select value={agentData.personality?.creativity} onChange={e => setAgentData({...agentData, personality: {...agentData.personality!, creativity: e.target.value as any}})} className="w-full bg-brand-light-gray border border-brand-border rounded px-2 py-1">
+                                <option>low</option><option>medium</option><option>high</option><option>maximum</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-brand-text-secondary block mb-1">Verbosity</label>
+                            <select value={agentData.personality?.verbosity} onChange={e => setAgentData({...agentData, personality: {...agentData.personality!, verbosity: e.target.value as any}})} className="w-full bg-brand-light-gray border border-brand-border rounded px-2 py-1">
+                                <option>concise</option><option>balanced</option><option>detailed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onClick={handleGeneratePersona} disabled={isGeneratingPersona} className="w-full mt-3 bg-brand-secondary/20 hover:bg-brand-secondary/40 text-brand-secondary text-xs font-semibold py-1.5 rounded flex items-center justify-center gap-1 disabled:opacity-50">
+                        {isGeneratingPersona ? <SparklesIcon className="w-4 h-4 animate-pulse"/> : <SparklesIcon className="w-4 h-4"/>}
+                        {isGeneratingPersona ? 'Generating...' : 'Generate System Instruction'}
+                    </button>
+                </div>
+
                  <div>
                     <div className="flex border-b border-brand-border text-sm mb-2">
                         <button onClick={() => setInstructionMode('edit')} className={`px-3 py-1 ${instructionMode === 'edit' ? 'text-white border-b-2 border-brand-primary' : 'text-brand-text-secondary'}`}>Edit</button>
                         <button onClick={() => setInstructionMode('preview')} className={`px-3 py-1 ${instructionMode === 'preview' ? 'text-white border-b-2 border-brand-primary' : 'text-brand-text-secondary'}`}>Preview</button>
                     </div>
                      {instructionMode === 'edit' ? (
-                        <textarea value={agentData.systemInstruction || ''} onChange={e => setAgentData({...agentData, systemInstruction: e.target.value})} rows={8} className="w-full bg-brand-light-gray border border-brand-border rounded-md p-2 text-xs resize-none" />
+                        <textarea value={agentData.systemInstruction || ''} onChange={e => setAgentData({...agentData, systemInstruction: e.target.value})} rows={8} className="w-full bg-brand-light-gray border border-brand-border rounded-md p-2 text-sm resize-none" />
                      ) : (
                         <MarkdownPreview content={agentData.systemInstruction || ''} />
                      )}
@@ -270,13 +341,27 @@ const AgentEditor: React.FC<AgentEditorProps> = ({ setActiveView }) => {
                                     <div className="p-3 border-t border-brand-border space-y-3">
                                         {toolDef.settings.map(setting => (
                                             <div key={setting.key}>
-                                                <label className="text-xs text-brand-text-secondary block mb-1">{setting.label}</label>
-                                                <input
-                                                    type={setting.type}
-                                                    value={toolConfig.settings[setting.key] ?? setting.defaultValue}
-                                                    onChange={e => handleToolSettingChange(toolDef.id, setting.key, setting.type === 'number' ? parseFloat(e.target.value) : e.target.value)}
-                                                    className="w-full bg-brand-light-gray border border-brand-border rounded-md px-2 py-1 text-xs"
-                                                />
+                                                {setting.type === 'boolean' ? (
+                                                    <label className="flex items-center gap-2 text-xs text-brand-text-secondary cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={toolConfig.settings[setting.key] ?? setting.defaultValue}
+                                                            onChange={e => handleToolSettingChange(toolDef.id, setting.key, e.target.checked)}
+                                                            className="bg-brand-light-gray border-brand-border rounded text-brand-primary focus:ring-brand-primary focus:ring-offset-brand-gray"
+                                                        />
+                                                        <span>{setting.label}</span>
+                                                    </label>
+                                                ) : (
+                                                    <>
+                                                        <label className="text-xs text-brand-text-secondary block mb-1">{setting.label}</label>
+                                                        <input
+                                                            type={setting.type}
+                                                            value={toolConfig.settings[setting.key] ?? setting.defaultValue}
+                                                            onChange={e => handleToolSettingChange(toolDef.id, setting.key, setting.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
+                                                            className="w-full bg-brand-light-gray border border-brand-border rounded-md px-2 py-1 text-xs"
+                                                        />
+                                                    </>
+                                                )}
                                             </div>
                                         ))}
                                     </div>

@@ -40,7 +40,8 @@ export const AVAILABLE_TOOLS: ToolDefinition[] = [
         description: 'Fetches the content of a public webpage.',
         icon: React.createElement(GlobeAltIcon, { className: "w-5 h-5" }),
         settings: [
-            { key: 'userAgent', label: 'User-Agent', type: 'string', defaultValue: 'AgentricAI-Web-Bot/1.0' }
+            { key: 'userAgent', label: 'User-Agent', type: 'string', defaultValue: 'AgentricAI-Web-Bot/1.0' },
+            { key: 'allowRedirects', label: 'Allow Redirects', type: 'boolean', defaultValue: true }
         ]
     },
 ];

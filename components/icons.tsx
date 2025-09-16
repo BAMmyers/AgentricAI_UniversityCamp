@@ -3,6 +3,33 @@ import React from 'react';
 // Generic Icon Props
 type IconProps = React.SVGProps<SVGSVGElement>;
 
+export const EnvelopeIcon: React.FC<IconProps> = (props) => (
+    <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+    </svg>
+);
+
+
+export const CreditCardIcon: React.FC<IconProps> = (props) => (
+    <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
+    </svg>
+);
+
+
+export const ArrowRightOnRectangleIcon: React.FC<IconProps> = (props) => (
+    <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+    </svg>
+);
+
+export const UserIcon: React.FC<IconProps> = (props) => (
+    <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+    </svg>
+);
+
+
 export const TrophyIcon: React.FC<IconProps> = (props) => (
     <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9a9.75 9.75 0 0 1 9 0Zm0 0c1.516 0 2.964-.224 4.31-.639a.75.75 0 0 0 .52-1.033 3.75 3.75 0 0 0-8.32 0 .75.75 0 0 0 .52 1.033c1.346.415 2.794.64 4.31.64ZM9.816 15.75a3.75 3.75 0 0 1 4.368 0" />
@@ -292,7 +319,6 @@ export const ArrowUpOnSquareIcon: React.FC<IconProps> = (props) => (
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v10.5" />
     </svg>
 );
-// FIX: Added CheckCircleIcon and XCircleIcon to this file to be used globally.
 export const CheckCircleIcon: React.FC<IconProps> = (props) => (
     <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -331,5 +357,10 @@ export const IdentificationIcon: React.FC<IconProps> = (props) => (
 export const LightBulbIcon: React.FC<IconProps> = (props) => (
     <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.311a7.5 7.5 0 0 1-7.5 0c-1.421-.492-2.682-1.233-3.654-2.199a12.06 12.06 0 0 1-2.199-3.654C2.083 13.182 2 12.599 2 12c0-.599.083-1.182.247-1.747a12.06 12.06 0 0 1 2.199-3.654C5.318 5.682 6.579 4.94 8 4.448c.842-.284 1.713-.448 2.625-.448s1.783.164 2.625.448c1.421.492 2.682 1.233 3.654 2.199a12.06 12.06 0 0 1 2.199 3.654C21.917 10.818 22 11.401 22 12c0 .599-.083 1.182-.247 1.747a12.06 12.06 0 0 1-2.199 3.654c-.972.966-2.233 1.707-3.654 2.199a12.06 12.06 0 0 1-4.5 0Z" />
+    </svg>
+);
+export const StarIcon: React.FC<IconProps> = (props) => (
+    <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.324l5.584.426a.563.563 0 0 1 .31.958l-4.118 3.984a.563.563 0 0 0-.182.557l1.285 5.385a.563.563 0 0 1-.84.61l-4.92-2.94a.563.563 0 0 0-.578 0l-4.92 2.94a.563.563 0 0 1-.84-.61l1.285-5.386a.563.563 0 0 0-.182-.557l-4.118-3.984a.563.563 0 0 1 .31-.958l5.584-.426a.563.563 0 0 0 .475-.324L11.48 3.5Z" />
     </svg>
 );

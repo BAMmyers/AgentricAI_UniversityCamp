@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
-// FIX: Added CheckCircleIcon and XCircleIcon to imports, they are now defined in icons.tsx
 import { PlusIcon, PlayIcon, TrashIcon, CodeBracketIcon, BookOpenIcon, BeakerIcon, GlobeAltIcon, CommandLineIcon, ArrowDownTrayIcon, ArrowUpTrayIcon, EyeIcon, PhotoIcon, ChatBubbleBottomCenterTextIcon, DocumentTextIcon, CpuIcon, SparklesIcon, QuestionMarkCircleIcon, ClipboardDocumentListIcon, DocumentMinusIcon, UserPlusIcon, PencilSquareIcon, InformationCircleIcon, XCircleIcon, CheckCircleIcon } from './icons';
-import { View } from '../App';
+import { View } from '../types/index';
 import { useAppContext } from '../context/AppContext';
 import { NodeData, Connection, Point, NodeType, Workflow, Agent } from '../types/index';
 import { generateContent } from '../services/geminiService';
@@ -65,15 +64,21 @@ const getCurvePath = (startPos: Point, endPos: Point): string => {
 // --- NODE COMPONENT ---
 const NodeComponent: React.FC<{ data: NodeData; onNodeMouseDown: (e: React.MouseEvent, nodeId: string) => void; onPortMouseDown: (e: React.MouseEvent, nodeId: string, portName: string, type: 'input' | 'output') => void; onPortMouseUp: (e: React.MouseEvent, nodeId: string, portName: string, type: 'input' | 'output') => void; onContentChange: (nodeId: string, content: any) => void; onCreateAgent: (definition: any) => void; }> = ({ data, onNodeMouseDown, onPortMouseDown, onPortMouseUp, onContentChange, onCreateAgent }) => (
     <div
-        className={`absolute bg-brand-gray border-2 ${data.color} rounded-md shadow-lg flex flex-col select-none transition-shadow duration-200 ${data.status === 'running' ? 'shadow-yellow-400/50' : ''}`}
+        className={`group absolute bg-brand-gray border-2 ${data.status === 'error' ? 'border-red-500 shadow-lg shadow-red-500/30 ring-2 ring-red-500' : data.color} rounded-md flex flex-col select-none transition-all duration-200 ${data.status === 'running' ? 'shadow-lg shadow-yellow-400/50 scale-105' : ''}`}
         style={{ width: `${NODE_WIDTH}px`, top: data.position.y, left: data.position.x, cursor: 'grab' }}
         onMouseDown={(e) => onNodeMouseDown(e, data.id)}
     >
+        {data.error && (
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-max max-w-xs p-2 bg-red-600 text-white text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-normal z-10 pointer-events-none">
+                <p className="font-bold">Error:</p>
+                {data.error}
+            </div>
+        )}
         <div className="bg-brand-light-gray p-2 rounded-t-md text-white font-bold text-xs flex items-center justify-between">
             <div className="flex items-center gap-2">{data.icon}<span>{data.title}</span></div>
             {data.status === 'running' && <CpuIcon className="w-4 h-4 text-yellow-400 animate-spin" />}
-            {data.status === 'success' && <div className="w-2 h-2 bg-green-500 rounded-full"></div>}
-            {data.status === 'error' && <div className="w-2 h-2 bg-red-500 rounded-full"></div>}
+            {data.status === 'success' && <CheckCircleIcon className="w-4 h-4 text-green-400"/>}
+            {data.status === 'error' && <XCircleIcon className="w-4 h-4 text-red-400" />}
         </div>
         <div className="p-2 relative min-h-[80px]">
             {data.inputs.map((input) => (
@@ -175,6 +180,7 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
             identity: definition.name,
             model: 'gemini-2.5-flash',
             systemInstruction: definition.systemInstruction,
+            personality: { tone: 'professional', creativity: 'medium', verbosity: 'balanced' },
             tools: [],
             coreMemory: [],
         };
@@ -202,7 +208,7 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
         const processedNodeIds = new Set<string>();
         let processingQueue = [...nodesToProcess];
     
-        let currentNodes: NodeData[] = activeWorkflow.nodes.map(n => ({...n, status: 'idle', outputData: undefined}));
+        let currentNodes: NodeData[] = activeWorkflow.nodes.map(n => ({...n, status: 'idle', outputData: undefined, error: undefined}));
         updateWorkflow(currentNodes, activeWorkflow.connections);
 
         const executeNode = async (node: NodeData): Promise<any> => {
@@ -284,7 +290,7 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
                 log(`ERROR executing node ${node.title}: ${errorMessage}`, 'error');
-                currentNodes = currentNodes.map(n => n.id === node.id ? { ...n, status: 'error' } : n);
+                currentNodes = currentNodes.map(n => n.id === node.id ? { ...n, status: 'error', error: errorMessage } : n);
                 updateWorkflow(currentNodes, activeWorkflow.connections);
                 throw error;
             }

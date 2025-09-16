@@ -1,7 +1,8 @@
 import React from 'react';
 import { ChartLineIcon, CpuIcon, DatabaseIcon, GroupIcon, MessageIcon, UserGroupIcon, AcademicCapIcon, BoltIcon, ShieldCheckIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
-import { View } from '../App';
+// FIX: Changed import path for View type
+import { View } from '../types/index';
 
 interface StatCardProps {
   title: string;
@@ -113,7 +114,8 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
             icon={<UserGroupIcon className="w-12 h-12 mx-auto text-brand-cyan mb-4" />}
             title="Student Monitoring"
             description="Track student progress and engagement."
-            onClick={() => setActiveView('student-dashboard')}
+            // FIX: Changed to a valid view for the admin portal.
+            onClick={() => setActiveView('student-roster')}
         />
         <ActionCard 
             icon={<BoltIcon className="w-12 h-12 mx-auto text-brand-cyan mb-4" />}

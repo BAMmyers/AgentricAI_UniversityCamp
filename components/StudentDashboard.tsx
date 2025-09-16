@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { View } from '../App';
 import { ArrowUturnLeftIcon, XMarkIcon, SparklesIcon, TrophyIcon, ArrowPathIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 import { Workflow, NodeData, ScheduleItem, ShowcasedProject } from '../types/index';
@@ -56,7 +55,7 @@ const ActivityModal: React.FC<{ item: ScheduleItem; content: any; onClose: () =>
 );
 
 // --- DASHBOARD COMPONENT ---
-const StudentDashboard: React.FC<{ setActiveView: (view: View) => void }> = ({ setActiveView }) => {
+const StudentDashboard: React.FC = () => {
     const { state, dispatch } = useAppContext();
     const activeStudent = state.students.find(s => s.id === state.activeStudentId) || null;
     const companionAgent = activeStudent ? state.agents.find(a => a.id === activeStudent.companionAgentId) || null : null;
@@ -145,7 +144,9 @@ const StudentDashboard: React.FC<{ setActiveView: (view: View) => void }> = ({ s
             });
 
         } catch (error) {
-            setModalContent("Sorry, there was an error running this activity.");
+            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred running this activity.";
+            setModalContent(errorMessage);
+            dispatch({ type: 'SHOW_TOAST', payload: { message: errorMessage, type: 'error' } });
             console.error("Workflow execution error:", error);
         } finally {
             setIsExecuting(false);
@@ -168,7 +169,7 @@ const StudentDashboard: React.FC<{ setActiveView: (view: View) => void }> = ({ s
         });
         dispatch({
             type: 'SHOW_TOAST',
-            payload: { message: `Agent has "observed" a new interest in ${newPref} and will adapt the schedule!`, type: 'info' }
+            payload: { message: `Agent has "observed" a new interest in ${newPref}!`, type: 'info' }
         });
     }
 
@@ -202,14 +203,15 @@ const StudentDashboard: React.FC<{ setActiveView: (view: View) => void }> = ({ s
                         <ArrowPathIcon className="w-5 h-5"/>
                         <span className="text-sm">Agent: Observe & Adapt</span>
                     </button>
-                    <button onClick={() => setActiveView('university')} className="flex items-center gap-2 bg-brand-gray px-4 py-2 rounded-lg hover:bg-brand-light-gray transition-colors duration-200">
-                        <ArrowUturnLeftIcon className="w-5 h-5" />
-                        <span className="text-sm">Exit</span>
-                    </button>
                 </div>
             </header>
             
             <main className="flex-grow grid grid-cols-2 md:grid-cols-4 gap-6">
+                {activeStudent.schedule.length === 0 && (
+                    <div className="col-span-full flex items-center justify-center text-brand-text-secondary">
+                        Your companion agent is preparing your first set of activities...
+                    </div>
+                )}
                 {activeStudent.schedule.map(item => (
                     <div 
                         key={item.id}

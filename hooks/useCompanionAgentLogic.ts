@@ -25,7 +25,8 @@ export const useCompanionAgentLogic = () => {
         if (newInputs.length === 0) return;
 
         console.log(`Companion Agent [${agent.name}] is evolving the schedule based on new inputs: [${newInputs.join(', ')}]`);
-        
+        dispatch({ type: 'SHOW_TOAST', payload: { message: `Companion Agent is designing a new activity based on updated goals...`, type: 'info' } });
+
         const prompt = `
             An AI tutor needs to create a new learning activity for a student. Synthesize the following data points to propose a new, engaging activity.
             
@@ -40,9 +41,8 @@ export const useCompanionAgentLogic = () => {
             3. "summary": A one-sentence summary for the parent/teacher log explaining why you created this activity (e.g., "Created a 'Dino Game Design' activity to channel the student's interest in gaming towards the teacher's new game development curriculum.").
         `;
         
-        const { text: result } = await generateContent({ prompt, systemInstruction: "You are an expert educational strategist who designs personalized learning plans." });
-
         try {
+            const { text: result } = await generateContent({ prompt, systemInstruction: "You are an expert educational strategist who designs personalized learning plans." });
             const newActivity = JSON.parse(result);
             const newWorkflow: Workflow = {
                 id: `wf-custom-${student.id}-${Date.now()}`, name: newActivity.title, ownerAgentId: agent.id,
@@ -56,7 +56,6 @@ export const useCompanionAgentLogic = () => {
 
             const newScheduleItem: ScheduleItem = {
                 id: `sched-custom-${Date.now()}`, title: newActivity.title, workflowId: newWorkflow.id, status: 'pending',
-// FIX: Replaced JSX with React.createElement to be valid in a .ts file
                 icon: React.createElement(SparklesIcon, { className: "w-16 h-16" }), color: 'bg-gradient-to-br from-purple-500 to-indigo-600',
                 notes: `Suggested for you!`
             };
@@ -66,8 +65,10 @@ export const useCompanionAgentLogic = () => {
             
             // Mark these inputs as processed.
             processedGoalsRef.current.push(...newInputs);
+
         } catch (error) {
-            console.error("Failed to parse AI response for schedule evolution:", error, "Response was:", result);
+            console.error("Failed to parse AI response for schedule evolution:", error);
+            dispatch({ type: 'SHOW_TOAST', payload: { message: `Agent failed to design a new activity. Error: ${error}`, type: 'error' } });
         }
     }, [dispatch, state.students]);
 
@@ -96,15 +97,14 @@ export const useCompanionAgentLogic = () => {
                 dispatch({ type: 'ADD_WORKFLOW', payload: storyWorkflow });
                 dispatch({ type: 'ADD_WORKFLOW', payload: artWorkflow });
                 const initialSchedule: ScheduleItem[] = [
-// FIX: Replaced JSX with React.createElement to be valid in a .ts file
                     { id: 'sched1', title: "Today's Story", workflowId: storyWorkflow.id, status: 'pending', icon: React.createElement(BookOpenIcon, { className: "w-16 h-16" }), color: 'bg-gradient-to-br from-blue-500 to-cyan-500' },
-// FIX: Replaced JSX with React.createElement to be valid in a .ts file
                     { id: 'sched2', title: 'Art Idea', workflowId: artWorkflow.id, status: 'pending', icon: React.createElement(PaintBrushIcon, { className: "w-16 h-16" }), color: 'bg-gradient-to-br from-red-500 to-orange-500' },
                 ];
                 dispatch({ type: 'UPDATE_STUDENT_SCHEDULE', payload: { studentId: activeStudent.id, schedule: initialSchedule } });
-            } else { // Ongoing Evolution: Check for new goals/preferences and adapt.
-                evolveSchedule(activeStudent, companionAgent);
             }
+            // Ongoing Evolution: Check for new goals/preferences and adapt.
+            evolveSchedule(activeStudent, companionAgent);
+            
         }
     }, [activeStudent, companionAgent, dispatch, evolveSchedule]);
 };

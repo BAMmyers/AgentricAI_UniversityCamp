@@ -1,10 +1,47 @@
 import React from 'react';
 
+// Centralized View type for navigation state.
+export type View =
+  | 'dashboard'
+  | 'studio'
+  | 'agent-editor'
+  | 'university'
+  | 'core'
+  | 'gateway'
+  | 'student-roster'
+  | 'parent-teacher-console'
+  | 'showcase'
+  | 'account'
+  | 'student-dashboard';
+
+export type UserRole = 'student' | 'parent' | 'teacher' | 'admin';
+export type SubscriptionPlan = 'free' | 'pro';
+
+export interface User {
+    id: string;
+    email: string;
+    role: UserRole;
+    subscriptionPlan: SubscriptionPlan;
+}
+
+export interface CodeChange {
+  filePath: string;
+  modifiedContent: string;
+}
+
+export interface ProposedChanges {
+  summary: string;
+  changes: CodeChange[];
+}
+
+
 export interface ChatMessage {
   id: string;
   sender: 'user' | 'bot';
   text: string;
   timestamp: string;
+  mode?: 'confirmation';
+  proposedChanges?: ProposedChanges;
 }
 
 export interface ManifestAgent {
@@ -42,15 +79,16 @@ export interface NodeData {
   content?: Record<string, any>;
   status?: 'idle' | 'running' | 'success' | 'error';
   outputData?: any;
+  error?: string;
   color: string;
   icon?: React.ReactNode;
 }
 
 export interface Connection {
   fromNodeId: string;
-  fromOutput: string; // output name
+  fromOutput: string;
   toNodeId: string;
-  toInput: string; // input name
+  toInput: string;
 }
 
 export interface Workflow {
@@ -58,7 +96,7 @@ export interface Workflow {
     name: string;
     nodes: NodeData[];
     connections: Connection[];
-    ownerAgentId?: string; // Link workflow to the agent that created it
+    ownerAgentId?: string;
 }
 
 export interface ToolSettingDefinition {
@@ -94,10 +132,15 @@ export interface Agent {
     model: string;
     identity: string;
     systemInstruction: string;
+    personality: {
+        tone: 'formal' | 'casual' | 'playful' | 'professional';
+        creativity: 'low' | 'medium' | 'high' | 'maximum';
+        verbosity: 'concise' | 'balanced' | 'detailed';
+    };
     tools: ToolConfig[];
     coreMemory: MemoryBlock[];
-    type?: 'General' | 'Companion'; // Differentiate agent types
-    studentId?: string; // Link companion agent to a student
+    type?: 'General' | 'Companion';
+    studentId?: string;
 }
 
 export interface ScheduleItem {
@@ -107,13 +150,13 @@ export interface ScheduleItem {
     icon: React.ReactNode;
     color: string;
     status: 'pending' | 'in-progress' | 'completed';
-    notes?: string; // Note from the agent about why this was added/modified
-    review?: string; // Agent's constructive feedback after completion
+    notes?: string;
+    review?: string;
 }
 
 export interface ActivityLogEntry {
     timestamp: string;
-    summary: string; // Agent-generated summary of the activity
+    summary: string;
     scheduleItemId: string;
 }
 
@@ -125,10 +168,8 @@ export interface Student {
         preferredTopics: string[];
         learningStyle: 'visual' | 'auditory' | 'kinesthetic';
     };
-    // Inputs from external stakeholders
     parentGoals: string[];
     teacherCurriculum: string[];
-    // Agent-curated log for external review
     activityLog: ActivityLogEntry[];
 }
 
@@ -141,7 +182,7 @@ export interface UpdateStudentGoalsPayload {
 export interface UpdateStudentProfilePayload {
     studentId: string;
     preferences: Student['preferences'];
-    learningGoals?: string[]; // Kept this generic for future use
+    learningGoals?: string[];
 }
 
 
@@ -153,7 +194,7 @@ export interface LogActivityPayload {
 }
 
 export interface ShowcasedProject {
-    id: string; // scheduleItem.id can be used for uniqueness
+    id: string;
     title: string;
     content: any;
     companionAgentId: string;
@@ -165,11 +206,15 @@ export interface Toast {
   type: 'success' | 'error' | 'info';
 }
 
+export type MissionStepStatus = 'pending' | 'active' | 'completed' | 'error';
+
 export interface MissionStep {
     step: number;
     agent: string;
     action: string;
     objective: string;
+    status?: MissionStepStatus;
+    result?: string;
 }
 
 export interface MissionPlan {
@@ -177,12 +222,26 @@ export interface MissionPlan {
     steps: MissionStep[];
 }
 
+export interface CommLogEntry {
+    timestamp: string;
+    source: string;
+    target?: string;
+    content: string;
+}
+
+export interface SystemError {
+    error: Error;
+    errorInfo: React.ErrorInfo;
+}
+
 export interface AppState {
+  currentUser: User | null;
   agents: Agent[];
   workflows: Workflow[];
   students: Student[];
   showcasedProjects: ShowcasedProject[];
   toasts: Toast[];
+  systemError: SystemError | null;
   activeAgentId: string | null;
   activeWorkflowId: string | null;
   activeStudentId: string | null;

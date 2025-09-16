@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { CheckCircleIcon, XCircleIcon, InformationCircleIcon } from './icons'; // Assuming you have these icons
+import { CheckCircleIcon, XCircleIcon, InformationCircleIcon } from './icons';
 
 const Toast: React.FC<{ message: string; type: 'success' | 'error' | 'info'; onDismiss: () => void }> = ({ message, type, onDismiss }) => {
   useEffect(() => {
