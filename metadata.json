@@ -1,0 +1,5 @@
+{
+  "name": "AgentricAI Admin Studio",
+  "description": "An administrative interface for building and managing AI agent workflows for an AI-powered education system. It features a node-based workflow builder and a comprehensive dashboard for monitoring system health and agent performance.",
+  "requestFramePermissions": []
+}
