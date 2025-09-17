@@ -17,10 +17,12 @@ This platform was conceived, designed, and created by **Brandon Anthony Myers**,
 ## Platform Showcase
 
 **Login & Role Selection**
-![Login Screen](./docs/screenshots/01-login.png)
+![Login Screen](./docs/screenshots/01-login.png)<img width="2560" height="1600" alt="Screenshot 2025-09-16 165232" src="https://github.com/user-attachments/assets/592fc157-b288-49ac-a215-116dcdaa79f0" />
+
 
 **Administrative Control Center**
-![Administrative Dashboard](./docs/screenshots/02-dashboard.png)
+![Administrative Dashboard](./docs/screenshots/02-dashboard.png)<img width="2560" height="1600" alt="Screenshot 2025-09-16 165331" src="https://github.com/user-attachments/assets/ed819f54-a402-40af-9b7a-ccb239cdb4b4" />
+
 
 **Agent Roster & Mission Command**
 ![Mission Command View](./docs/screenshots/03-mission-command.png)
