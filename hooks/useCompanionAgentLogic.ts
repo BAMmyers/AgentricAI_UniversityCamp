@@ -2,45 +2,55 @@ import React, { useEffect, useCallback, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { Agent, Student, Workflow, ScheduleItem } from '../types/index';
 import { generateContent } from '../services/logicBroker';
-import { BookOpenIcon, PaintBrushIcon, SparklesIcon } from '../components/icons';
+import { BookOpenIcon, PaintBrushIcon, SparklesIcon, StarIcon } from '../components/icons';
 
 export const useCompanionAgentLogic = () => {
     const { state, dispatch } = useAppContext();
     const activeStudent = state.students.find(s => s.id === state.activeStudentId) || null;
     const companionAgent = activeStudent ? state.agents.find(a => a.id === activeStudent.companionAgentId) || null : null;
+    const { curriculum } = state;
     const brokerParams = { isPremium: state.currentUser?.subscriptionPlan === 'pro' };
 
     const processedGoalsRef = useRef<string[]>([]);
 
     const evolveSchedule = useCallback(async (student: Student, agent: Agent) => {
-        const allInputs = [
+        const allParentAndTeacherInputs = [
             ...student.parentGoals,
             ...student.teacherCurriculum,
-            ...student.preferences.preferredTopics
         ];
-        
-        const newInputs = allInputs.filter(g => !processedGoalsRef.current.includes(g));
+
+        const relevantCurriculum = (curriculum || []).filter(item => 
+            student.preferences.preferredTopics.some(topic => 
+                item.title.toLowerCase().includes(topic) || item.content.toLowerCase().includes(topic)
+            )
+        );
+
+        const newInputs = [
+            ...allParentAndTeacherInputs,
+            ...relevantCurriculum.map(c => `${c.title}: ${c.content}`)
+        ].filter(g => !processedGoalsRef.current.includes(g));
+
         if (newInputs.length === 0) return;
 
         dispatch({ type: 'SHOW_TOAST', payload: { message: `Companion Agent is designing a new activity based on updated goals...`, type: 'info' } });
 
         const newTopic = newInputs[newInputs.length - 1];
         
-        // Use the logic broker to generate the activity. It will use the local processor for free users
-        // and the Gemini API for premium users, creating a more advanced activity.
+        const curriculumContext = relevantCurriculum.length > 0
+            ? `\n\nReference the following curriculum points provided by the teacher:\n${relevantCurriculum.map(c => `- ${c.title}: ${c.content}`).join('\n')}`
+            : '';
+        
         const prompt = brokerParams.isPremium 
-            ? `Create a title and a one-paragraph creative learning activity description for a young, neurodiverse learner interested in "${newTopic}". Respond with ONLY a JSON object with keys "title" and "description".`
-            : `Create a simple activity about ${newTopic}`; // The local processor will handle this simpler prompt.
+            ? `Create a title and a one-paragraph creative learning activity description for a young, neurodiverse learner interested in "${newTopic}".${curriculumContext}\n\nRespond with ONLY a JSON object with keys "title" and "description".`
+            : `Create a simple activity about ${newTopic}`;
 
         const { text: generationResult } = await generateContent({ prompt }, brokerParams);
         
         let activity: { title: string, description: string };
         try {
-            // Premium users get structured JSON
             const parsed = JSON.parse(generationResult);
             activity = { title: parsed.title, description: parsed.description };
         } catch (e) {
-            // Free users get a simple string, which we structure ourselves
             activity = { title: `Activity: ${newTopic}`, description: generationResult };
         }
 
@@ -58,7 +68,8 @@ export const useCompanionAgentLogic = () => {
         const newScheduleItem: ScheduleItem = {
             id: `sched-custom-${Date.now()}`, title: activity.title, workflowId: newWorkflow.id, status: 'pending',
             icon: React.createElement(SparklesIcon, { className: "w-16 h-16" }), color: 'bg-gradient-to-br from-purple-500 to-indigo-600',
-            notes: `Suggested for you!`
+            notes: `Suggested for you!`,
+            type: 'activity',
         };
         
         const currentSchedule = state.students.find(s => s.id === student.id)?.schedule || [];
@@ -66,7 +77,7 @@ export const useCompanionAgentLogic = () => {
         
         processedGoalsRef.current.push(...newInputs);
         
-    }, [dispatch, state.students, brokerParams]);
+    }, [dispatch, state.students, brokerParams, curriculum]);
 
     useEffect(() => {
         if (activeStudent && companionAgent) {
@@ -91,12 +102,13 @@ export const useCompanionAgentLogic = () => {
                 dispatch({ type: 'ADD_WORKFLOW', payload: storyWorkflow });
                 dispatch({ type: 'ADD_WORKFLOW', payload: artWorkflow });
                 const initialSchedule: ScheduleItem[] = [
-                    { id: 'sched1', title: "Today's Story", workflowId: storyWorkflow.id, status: 'pending', icon: React.createElement(BookOpenIcon, { className: "w-16 h-16" }), color: 'bg-gradient-to-br from-blue-500 to-cyan-500' },
-                    { id: 'sched2', title: 'Art Idea', workflowId: artWorkflow.id, status: 'pending', icon: React.createElement(PaintBrushIcon, { className: "w-16 h-16" }), color: 'bg-gradient-to-br from-red-500 to-orange-500' },
+                    { id: 'sched1', title: "Today's Story", workflowId: storyWorkflow.id, status: 'pending', icon: React.createElement(BookOpenIcon, { className: "w-16 h-16" }), color: 'bg-gradient-to-br from-blue-500 to-cyan-500', type: 'activity' },
+                    { id: 'sched2', title: 'Art Idea', workflowId: artWorkflow.id, status: 'pending', icon: React.createElement(PaintBrushIcon, { className: "w-16 h-16" }), color: 'bg-gradient-to-br from-red-500 to-orange-500', type: 'activity' },
+                    { id: 'sched-live', title: "Live Seminar", workflowId: 'live-lecture-workflow', status: 'pending', type: 'lecture', icon: React.createElement(StarIcon, { className: "w-16 h-16" }), color: 'bg-gradient-to-br from-yellow-400 to-orange-500', notes: "Join Live!" },
                 ];
                 dispatch({ type: 'UPDATE_STUDENT_SCHEDULE', payload: { studentId: activeStudent.id, schedule: initialSchedule } });
             }
             evolveSchedule(activeStudent, companionAgent);
         }
-    }, [activeStudent, companionAgent, dispatch, evolveSchedule]);
+    }, [activeStudent, companionAgent, dispatch, evolveSchedule, curriculum]);
 };

@@ -1,5 +1,5 @@
 import React, { createContext, useReducer, useContext, useEffect } from 'react';
-import { Agent, Workflow, ManifestAgent, AppState, Student, ScheduleItem, UpdateStudentGoalsPayload, LogActivityPayload, ShowcasedProject, UpdateStudentProfilePayload, Toast, MissionPlan, User, UserRole, SubscriptionPlan, SystemError, MissionStep, SecurityLogEntry } from '../types/index';
+import { Agent, Workflow, ManifestAgent, AppState, Student, ScheduleItem, UpdateStudentGoalsPayload, LogActivityPayload, ShowcasedProject, UpdateStudentProfilePayload, Toast, MissionPlan, User, UserRole, SubscriptionPlan, SystemError, MissionStep, SecurityLogEntry, LiveLectureSession, CurriculumItem } from '../types/index';
 import { BookOpenIcon, PaintBrushIcon } from '../components/icons';
 
 type Action =
@@ -29,7 +29,13 @@ type Action =
   | { type: 'UPDATE_MISSION_STEP_STATE'; payload: { step: number; status: MissionStep['status']; result?: string } }
   | { type: 'SET_SYSTEM_ERROR', payload: SystemError | null }
   | { type: 'CLEAR_SYSTEM_ERROR' }
-  | { type: 'LOG_SECURITY_EVENT'; payload: Omit<SecurityLogEntry, 'timestamp'> };
+  | { type: 'LOG_SECURITY_EVENT'; payload: Omit<SecurityLogEntry, 'timestamp'> }
+  | { type: 'START_LECTURE' }
+  | { type: 'END_LECTURE' }
+  | { type: 'JOIN_LECTURE'; payload: string } // agentId
+  | { type: 'LEAVE_LECTURE'; payload: string } // agentId
+  | { type: 'ADD_CURRICULUM_ITEM'; payload: CurriculumItem }
+  | { type: 'REMOVE_CURRICULUM_ITEM'; payload: string }; // id
 
 const initialState: AppState = {
   currentUser: null,
@@ -72,6 +78,8 @@ const initialState: AppState = {
   missionTeam: [],
   missionPlan: null,
   securityLog: [],
+  liveLectureSession: { isActive: false, attendeeAgentIds: [] },
+  curriculum: [],
 };
 
 // Simple hash simulation for the frontend.
@@ -92,6 +100,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
             activeStudentId: loadedState.activeStudentId || null,
             showcasedProjects: loadedState.showcasedProjects || [],
             securityLog: loadedState.securityLog || [],
+            liveLectureSession: loadedState.liveLectureSession || { isActive: false, attendeeAgentIds: [] },
+            curriculum: loadedState.curriculum || [],
             toasts: [], // Do not persist toasts
             missionPlan: null, // Do not persist mission plans
             systemError: null, // Do not persist errors
@@ -370,6 +380,26 @@ const appReducer = (state: AppState, action: Action): AppState => {
         };
     case 'CLEAR_SYSTEM_ERROR':
         return { ...state, systemError: null };
+    case 'START_LECTURE':
+        return { ...state, liveLectureSession: { ...(state.liveLectureSession as LiveLectureSession), isActive: true } };
+    case 'END_LECTURE':
+        return { ...state, liveLectureSession: { isActive: false, attendeeAgentIds: [] } };
+    case 'JOIN_LECTURE':
+        if (!state.liveLectureSession || state.liveLectureSession.attendeeAgentIds.includes(action.payload)) return state;
+        return { ...state, liveLectureSession: { ...state.liveLectureSession, attendeeAgentIds: [...state.liveLectureSession.attendeeAgentIds, action.payload] } };
+    case 'LEAVE_LECTURE':
+        if (!state.liveLectureSession) return state;
+        return { ...state, liveLectureSession: { ...state.liveLectureSession, attendeeAgentIds: state.liveLectureSession.attendeeAgentIds.filter(id => id !== action.payload) } };
+    case 'ADD_CURRICULUM_ITEM':
+      return {
+        ...state,
+        curriculum: [...(state.curriculum || []), action.payload],
+      };
+    case 'REMOVE_CURRICULUM_ITEM':
+      return {
+        ...state,
+        curriculum: (state.curriculum || []).filter(item => item.id !== action.payload),
+      };
     default:
       return state;
   }

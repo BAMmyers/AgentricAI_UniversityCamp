@@ -5,7 +5,8 @@ import AgentEditor from './AgentEditor';
 import StudentView from './StudentView';
 import StudentDashboard from './StudentDashboard';
 import GatewayView from './GatewayView';
-import StudentRoster from './StudentRoster';
+import AgentRoster from './AgentRoster';
+import AgentDetailView from './AgentDetailView';
 import ParentTeacherConsole from './ParentTeacherConsole';
 import ShowcaseView from './ShowcaseView';
 import AccountView from './AccountView';
@@ -39,11 +40,6 @@ const AdminPortal: React.FC = () => {
      { id: 'account', label: 'Account & Billing', icon: <CreditCardIcon className="w-5 h-5" /> },
      { id: 'university', label: 'University Hub', icon: <AcademicCapIcon className="w-5 h-5" /> },
   ];
-
-  const navigateToConsole = (studentId: string) => {
-    setActiveStudentIdForConsole(studentId);
-    setActiveView('parent-teacher-console');
-  }
   
   const handleLogout = () => {
       dispatch({ type: 'LOGOUT' });
@@ -66,9 +62,13 @@ const AdminPortal: React.FC = () => {
       case 'system-optimization':
         return <SystemOptimizationView />;
       case 'student-roster':
-        return <StudentRoster navigateToConsole={navigateToConsole} />;
+        return <AgentRoster setActiveView={setActiveView} />;
+      case 'agent-detail':
+        return <AgentDetailView setActiveView={setActiveView} />;
       case 'parent-teacher-console':
-        return activeStudentIdForConsole ? <ParentTeacherConsole studentId={activeStudentIdForConsole} setActiveView={setActiveView} /> : <StudentRoster navigateToConsole={navigateToConsole} />;
+        // This view is now logically separate from the main roster. It can be removed or kept for direct student management.
+        // For now, it's unlinked from the main nav but can be accessed from other parts of the app if needed.
+        return activeStudentIdForConsole ? <ParentTeacherConsole studentId={activeStudentIdForConsole} setActiveView={setActiveView} /> : <AgentRoster setActiveView={setActiveView} />;
       case 'showcase':
         return <ShowcaseView />;
       case 'account':
@@ -97,7 +97,7 @@ const AdminPortal: React.FC = () => {
                 key={item.id}
                 onClick={() => setActiveView(item.id as View)}
                 className={`p-3 rounded-lg transition-colors duration-200 ${
-                  activeView === item.id || (activeView === 'parent-teacher-console' && item.id === 'student-roster')
+                  activeView === item.id || (activeView === 'agent-detail' && item.id === 'student-roster')
                     ? 'bg-brand-accent text-white' 
                     : 'text-brand-text-secondary hover:bg-brand-light-gray hover:text-white'
                 }`}

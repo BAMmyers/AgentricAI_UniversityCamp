@@ -4,6 +4,7 @@ import { useAppContext } from '../context/AppContext';
 import { Workflow, NodeData, ScheduleItem, ShowcasedProject } from '../types/index';
 import { generateContent } from '../services/logicBroker';
 import { useCompanionAgentLogic } from '../hooks/useCompanionAgentLogic';
+import LectureModal from './LectureModal';
 
 // --- MODAL FOR ACTIVITY ---
 const ActivityModal: React.FC<{ item: ScheduleItem; content: any; onClose: () => void; isLoading: boolean; onShowcase: () => void; isShowcased: boolean; agentName: string; }> = ({ item, content, onClose, isLoading, onShowcase, isShowcased, agentName }) => (
@@ -67,6 +68,7 @@ const StudentDashboard: React.FC = () => {
     const [activeModalItem, setActiveModalItem] = useState<ScheduleItem | null>(null);
     const [modalContent, setModalContent] = useState<any>(null);
     const [isExecuting, setIsExecuting] = useState(false);
+    const [isLectureModalOpen, setIsLectureModalOpen] = useState(false);
     
     const executeWorkflow = async (workflow: Workflow): Promise<any> => {
         const nodeOutputs: Record<string, any> = {};
@@ -129,6 +131,15 @@ const StudentDashboard: React.FC = () => {
     };
 
     const handleActivityClick = async (item: ScheduleItem) => {
+        if (item.type === 'lecture') {
+            if (state.liveLectureSession?.isActive) {
+                setIsLectureModalOpen(true);
+            } else {
+                dispatch({ type: 'SHOW_TOAST', payload: { message: 'The live lecture has not started yet.', type: 'info' } });
+            }
+            return;
+        }
+
         if (item.status === 'completed') {
             setActiveModalItem(item);
             setModalContent(`You've completed this activity! Great job.`);
@@ -217,6 +228,7 @@ const StudentDashboard: React.FC = () => {
     return (
         <div className="p-6 bg-brand-dark min-h-full flex flex-col">
             {activeModalItem && <ActivityModal item={currentModalItem!} content={modalContent} onClose={() => setActiveModalItem(null)} isLoading={isExecuting} onShowcase={handleShowcase} isShowcased={isShowcased} agentName={modalAgentName}/>}
+            {isLectureModalOpen && <LectureModal onClose={() => setIsLectureModalOpen(false)} />}
             <header className="flex justify-between items-center mb-8 flex-shrink-0">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Hello! I'm {companionAgent.identity}</h1>

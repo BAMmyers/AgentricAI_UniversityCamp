@@ -3,7 +3,9 @@ import StudentRoster from './StudentRoster';
 import ParentTeacherConsole from './ParentTeacherConsole';
 import ShowcaseView from './ShowcaseView';
 import AccountView from './AccountView';
-import { UserGroupIcon, TrophyIcon, ArrowRightOnRectangleIcon, CreditCardIcon } from './icons';
+import TeacherLectureView from './TeacherLectureView';
+import CurriculumManagerView from './CurriculumManagerView';
+import { UserGroupIcon, TrophyIcon, ArrowRightOnRectangleIcon, CreditCardIcon, StarIcon, BookOpenIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 // FIX: Import the centralized View type
 import { View } from '../types/index';
@@ -16,6 +18,8 @@ const ParentTeacherPortal: React.FC = () => {
 
     const navItems = [
         { id: 'student-roster', label: 'Student Roster', icon: <UserGroupIcon className="w-5 h-5" /> },
+        { id: 'curriculum-manager', label: 'Curriculum Manager', icon: <BookOpenIcon className="w-5 h-5" /> },
+        { id: 'teacher-lecture', label: 'Live Lecture Hall', icon: <StarIcon className="w-5 h-5" /> },
         { id: 'showcase', label: 'Project Showcase', icon: <TrophyIcon className="w-5 h-5" /> },
         { id: 'account', label: 'Account & Billing', icon: <CreditCardIcon className="w-5 h-5" /> },
     ];
@@ -35,6 +39,10 @@ const ParentTeacherPortal: React.FC = () => {
                 return <StudentRoster navigateToConsole={navigateToConsole} />;
             case 'parent-teacher-console':
                 return activeStudentId ? <ParentTeacherConsole studentId={activeStudentId} setActiveView={setActiveView} /> : <StudentRoster navigateToConsole={navigateToConsole} />;
+            case 'curriculum-manager':
+                return <CurriculumManagerView />;
+            case 'teacher-lecture':
+                return <TeacherLectureView />;
             case 'showcase':
                 return <ShowcaseView />;
             case 'account':
@@ -60,7 +68,7 @@ const ParentTeacherPortal: React.FC = () => {
                             <button
                                 key={item.id}
                                 onClick={() => setActiveView(item.id as View)}
-                                className={`p-3 rounded-lg transition-colors duration-200 ${
+                                className={`relative p-3 rounded-lg transition-colors duration-200 ${
                                     activeView === item.id || (activeView === 'parent-teacher-console' && item.id === 'student-roster')
                                     ? 'bg-brand-accent text-white' 
                                     : 'text-brand-text-secondary hover:bg-brand-light-gray hover:text-white'
@@ -68,6 +76,12 @@ const ParentTeacherPortal: React.FC = () => {
                                 title={item.label}
                             >
                                 {item.icon}
+                                {item.id === 'teacher-lecture' && state.liveLectureSession?.isActive && (
+                                    <span className="absolute top-1 right-1 flex h-3 w-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </div>

@@ -7,14 +7,17 @@ export type View =
   | 'agent-editor'
   | 'university'
   | 'gateway'
-  | 'student-roster'
+  | 'student-roster' // This ID is kept for routing, but now points to AgentRoster
   | 'parent-teacher-console'
   | 'showcase'
   | 'account'
   | 'student-dashboard'
   | 'system-optimization'
   | 'security-sentinel'
-  | 'mission-command';
+  | 'mission-command'
+  | 'teacher-lecture'
+  | 'agent-detail'
+  | 'curriculum-manager'; // New view for curriculum management
 
 export type UserRole = 'student' | 'parent' | 'teacher' | 'admin';
 export type SubscriptionPlan = 'free' | 'pro';
@@ -34,6 +37,7 @@ export interface CodeChange {
 
 export interface ProposedChanges {
   summary: string;
+
   changes: CodeChange[];
 }
 
@@ -155,6 +159,7 @@ export interface ScheduleItem {
     status: 'pending' | 'in-progress' | 'completed';
     notes?: string;
     review?: string;
+    type?: 'activity' | 'lecture';
 }
 
 export interface ActivityLogEntry {
@@ -252,6 +257,20 @@ export interface SecurityLogEntry {
     details: string;
 }
 
+export interface LiveLectureSession {
+    isActive: boolean;
+    attendeeAgentIds: string[];
+}
+
+export type CoreSubject = 'Math' | 'Reading' | 'Science' | 'History' | 'Language Arts' | 'Geography';
+
+export interface CurriculumItem {
+    id: string;
+    subject: CoreSubject;
+    title: string;
+    content: string;
+}
+
 export interface AppState {
   currentUser: User | null;
   users: User[];
@@ -267,4 +286,6 @@ export interface AppState {
   missionTeam: ManifestAgent[];
   missionPlan: MissionPlan | null;
   securityLog: SecurityLogEntry[];
+  liveLectureSession: LiveLectureSession | null;
+  curriculum: CurriculumItem[];
 }
