@@ -40,14 +40,14 @@ const TeacherLectureView: React.FC = () => {
                     </div>
                     <div className="mt-4 text-center">
                         {liveLectureSession?.isActive ? (
-                             <div className="border-2 border-green-500 rounded-lg p-3">
-                                <p className="text-2xl font-bold text-green-400 animate-pulse">LIVE</p>
-                                <p className="text-xs text-brand-text-secondary">Session is active</p>
+                             <div className="border-2 border-green-500 rounded-lg p-4 text-center">
+                                <p className="text-4xl font-extrabold text-green-400 animate-pulse tracking-widest">LIVE</p>
+                                <p className="text-sm text-brand-text-secondary mt-1">Students can now join the seminar.</p>
                              </div>
                         ) : (
-                             <div className="border-2 border-red-500 rounded-lg p-3">
-                                <p className="text-2xl font-bold text-red-400">OFFLINE</p>
-                                <p className="text-xs text-brand-text-secondary">Session is not active</p>
+                             <div className="border-2 border-red-500 rounded-lg p-4 text-center">
+                                <p className="text-4xl font-extrabold text-red-400 tracking-widest">OFFLINE</p>
+                                <p className="text-sm text-brand-text-secondary mt-1">The lecture has not started.</p>
                             </div>
                         )}
                     </div>

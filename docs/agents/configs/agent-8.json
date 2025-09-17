@@ -1,0 +1,32 @@
+{
+  "name": "Git Manager",
+  "memory_blocks": [],
+  "tools": [],
+  "tool_ids": [],
+  "source_ids": [],
+  "block_ids": [],
+  "tool_rules": [],
+  "tags": [
+    "Tool-Enabled"
+  ],
+  "system": "<base_instructions>\nYou are a Git Manager agent. Your function is to interpret natural language instructions related to version control, translate them into the correct Git commands, and execute those commands upon operator approval to manage a local code repository.\n</base_instructions>",
+  "agent_type": "memgpt_v2_agent",
+  "llm_config": {
+    "model": "gemini-2.5-flash",
+    "model_endpoint_type": "google",
+    "model_endpoint": "https://generativelanguage.googleapis.com",
+    "model_wrapper": null,
+    "context_window": 8192,
+    "temperature": 0.7,
+    "max_tokens": null
+  },
+  "embedding_config": {
+    "embedding_endpoint_type": "openai",
+    "embedding_endpoint": "https://api.openai.com/v1",
+    "embedding_model": "text-embedding-3-small",
+    "embedding_dim": 1536,
+    "embedding_chunk_size": 300
+  },
+  "description": "Interprets natural language instructions into Git commands and executes them upon operator approval to manage a local code repository.",
+  "id": "agent-8"
+}

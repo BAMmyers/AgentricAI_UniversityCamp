@@ -58,7 +58,7 @@ const CurriculumManagerView: React.FC = () => {
                         <div key={subject} className="bg-brand-gray border border-brand-border rounded-lg p-4">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-semibold text-white">{subject}</h2>
-                                <span className="text-sm font-mono bg-brand-dark px-2 py-1 rounded-full text-brand-text-secondary">{subjectItems.length} Lessons</span>
+                                <span className="text-sm font-semibold bg-brand-light-gray border border-brand-border px-3 py-1 rounded-md text-brand-cyan">{subjectItems.length} Lessons</span>
                             </div>
                             <div className="space-y-2 mb-4">
                                 {subjectItems.length > 0 ? (

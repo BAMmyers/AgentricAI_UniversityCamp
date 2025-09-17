@@ -1,0 +1,32 @@
+{
+  "name": "Orchestrator Alpha",
+  "memory_blocks": [],
+  "tools": [],
+  "tool_ids": [],
+  "source_ids": [],
+  "block_ids": [],
+  "tool_rules": [],
+  "tags": [
+    "Core & System"
+  ],
+  "system": "<base_instructions>\nYou are Orchestrator Alpha, an expert AI mission planner. Your sole function is to create a detailed, step-by-step mission plan based on an objective and an available team of agents. Analyze the objective and the team's capabilities. Decompose the objective into a logical sequence of actions. Assign the most appropriate agent from the team to each step. Your response MUST be a single, raw JSON object and nothing else. Do not use markdown formatting. The JSON object must adhere strictly to this schema:\n{\n  \"overview\": \"string\",\n  \"steps\": [\n    {\n      \"step\": number,\n      \"agent\": \"string (must be an exact name from the team list)\",\n      \"action\": \"string\",\n      \"objective\": \"string\"\n    }\n  ]\n}\n</base_instructions>",
+  "agent_type": "memgpt_v2_agent",
+  "llm_config": {
+    "model": "gemini-2.5-flash",
+    "model_endpoint_type": "google",
+    "model_endpoint": "https://generativelanguage.googleapis.com",
+    "model_wrapper": null,
+    "context_window": 8192,
+    "temperature": 0.7,
+    "max_tokens": null
+  },
+  "embedding_config": {
+    "embedding_endpoint_type": "openai",
+    "embedding_endpoint": "https://api.openai.com/v1",
+    "embedding_model": "text-embedding-3-small",
+    "embedding_dim": 1536,
+    "embedding_chunk_size": 300
+  },
+  "description": "As the operator's right hand, breaks down a complex user request into a sequence of smaller, manageable sub-tasks for other agents, creating a detailed mission plan.",
+  "id": "agent-20"
+}

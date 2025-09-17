@@ -41,7 +41,17 @@ export const useCompanionAgentLogic = () => {
             : '';
         
         const prompt = brokerParams.isPremium 
-            ? `Create a title and a one-paragraph creative learning activity description for a young, neurodiverse learner interested in "${newTopic}".${curriculumContext}\n\nRespond with ONLY a JSON object with keys "title" and "description".`
+            ? `You are a curriculum designer for a young, neurodiverse learner. Your task is to generate a single, engaging learning activity. The activity should be simple, creative, and positive. The content should be G-rated and suitable for all ages.
+
+**Topic:** "${newTopic}"
+${curriculumContext}
+
+Your response MUST be a single, raw JSON object and nothing else. Do not use markdown formatting.
+The JSON object must have this exact structure:
+{
+  "title": "A short, engaging title for the activity.",
+  "description": "A one-paragraph, easy-to-understand description of the activity."
+}`
             : `Create a simple activity about ${newTopic}`;
 
         const { text: generationResult } = await generateContent({ prompt }, brokerParams);

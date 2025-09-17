@@ -16,7 +16,7 @@ const NODE_TEMPLATES: Record<NodeType, Omit<NodeData, 'id' | 'position'>> = {
         type: 'textInput', title: 'Text Input', inputs: [], outputs: [{ name: 'text', type: 'string' }], color: 'border-blue-500', icon: <DocumentTextIcon className="w-4 h-4"/>, content: { text: 'A friendly robot' }
     },
     storyGenerator: {
-        type: 'storyGenerator', title: 'The Novelist', inputs: [{ name: 'prompt', type: 'string' }], outputs: [{ name: 'story', type: 'string' }], color: 'border-pink-500', icon: <SparklesIcon className="w-4 h-4"/>, content: { systemInstruction: 'You are a creative storyteller for children.' }
+        type: 'storyGenerator', title: 'The Novelist', inputs: [{ name: 'prompt', type: 'string' }], outputs: [{ name: 'story', type: 'string' }], color: 'border-pink-500', icon: <SparklesIcon className="w-4 h-4"/>, content: { systemInstruction: 'You are an exceptionally creative storyteller for young, neurodiverse learners. Your stories must be imaginative, positive, G-rated, and very easy to understand. Keep stories to 1-2 short paragraphs. Your tone is gentle, encouraging, and magical.' }
     },
     jsonExtractor: {
         type: 'jsonExtractor', title: 'Data Extractor', inputs: [{ name: 'text', type: 'string' }], outputs: [{ name: 'json', type: 'json' }], color: 'border-indigo-500', icon: <CodeBracketIcon className="w-4 h-4"/>, content: { schema: '{"character_name": "string", "setting": "string"}' }
@@ -28,7 +28,7 @@ const NODE_TEMPLATES: Record<NodeType, Omit<NodeData, 'id' | 'position'>> = {
         type: 'agentDesigner', title: 'Agent Designer', inputs: [{ name: 'task', type: 'string' }], outputs: [{ name: 'agentDefinition', type: 'json' }], color: 'border-purple-500', icon: <UserPlusIcon className="w-4 h-4"/>, content: { systemInstruction: `You are an expert AI agent designer. Based on a user's task description, you will create a concise, unique name for a new agent and a detailed system instruction (persona). Respond ONLY with a JSON object with the keys "name" and "systemInstruction".` }
     },
     quizGenerator: {
-        type: 'quizGenerator', title: 'The Tutor (Quiz Mode)', inputs: [{ name: 'topic', type: 'string' }], outputs: [{ name: 'quizJson', type: 'json' }], color: 'border-amber-500', icon: <QuestionMarkCircleIcon className="w-4 h-4"/>, content: { systemInstruction: 'You create educational multiple-choice quizzes about a given topic. You only respond with JSON.' }
+        type: 'quizGenerator', title: 'The Tutor (Quiz Mode)', inputs: [{ name: 'topic', type: 'string' }], outputs: [{ name: 'quizJson', type: 'json' }], color: 'border-amber-500', icon: <QuestionMarkCircleIcon className="w-4 h-4"/>, content: { systemInstruction: 'You are an expert tutor specializing in creating educational multiple-choice quizzes for young learners. For any given topic, you MUST generate a JSON array of exactly 3 questions. Each question object must adhere strictly to this schema: {"question": "string", "options": ["string", "string", "string"], "answer": "string"}. You MUST respond with ONLY the raw JSON array, with absolutely no explanations or markdown formatting.' }
     },
     lessonPlanner: {
         type: 'lessonPlanner', title: 'Curriculum Designer', inputs: [{ name: 'objective', type: 'string' }], outputs: [{ name: 'plan', type: 'string' }], color: 'border-sky-500', icon: <ClipboardDocumentListIcon className="w-4 h-4"/>, content: { systemInstruction: 'You are an expert curriculum designer who writes concise lesson plans.' }
@@ -259,7 +259,7 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
                         outputData = { image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' };
                         break;
                     case 'quizGenerator':
-                        const quizPrompt = `Create a 3-question multiple-choice quiz about "${inputs.topic}". Respond with ONLY the JSON array, nothing else. The JSON schema for each question should be: {"question": "string", "options": ["string", "string", "string"], "answer": "string"}`;
+                        const quizPrompt = `Create a 3-question multiple-choice quiz about "${inputs.topic}".`;
                         const { text: quizJsonString } = await generateContent({ prompt: quizPrompt, systemInstruction: node.content?.systemInstruction }, brokerParams);
                         outputData = { quizJson: JSON.parse(quizJsonString) };
                         break;

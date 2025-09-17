@@ -1,6 +1,7 @@
 import React, { createContext, useReducer, useContext, useEffect } from 'react';
 import { Agent, Workflow, ManifestAgent, AppState, Student, ScheduleItem, UpdateStudentGoalsPayload, LogActivityPayload, ShowcasedProject, UpdateStudentProfilePayload, Toast, MissionPlan, User, UserRole, SubscriptionPlan, SystemError, MissionStep, SecurityLogEntry, LiveLectureSession, CurriculumItem } from '../types/index';
 import { BookOpenIcon, PaintBrushIcon } from '../components/icons';
+import { saveStateToLocalStorage, loadStateFromLocalStorage } from '../utils/storage';
 
 type Action =
   | { type: 'SET_STATE'; payload: AppState }
@@ -35,7 +36,7 @@ type Action =
   | { type: 'JOIN_LECTURE'; payload: string } // agentId
   | { type: 'LEAVE_LECTURE'; payload: string } // agentId
   | { type: 'ADD_CURRICULUM_ITEM'; payload: CurriculumItem }
-  | { type: 'REMOVE_CURRICULUM_ITEM'; payload: string }; // id
+  | { type: 'REMOVE_CURRICULUM_ITEM'; payload: string };
 
 const initialState: AppState = {
   currentUser: null,
@@ -405,7 +406,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
   }
 };
 
-// FIX: Export AppContext so it can be used by class components like ErrorBoundary.
 export const AppContext = createContext<{
   state: AppState;
   dispatch: React.Dispatch<Action>;
@@ -414,28 +414,18 @@ export const AppContext = createContext<{
   dispatch: () => null,
 });
 
-const LOCAL_STORAGE_KEY = 'agentricai-app-state-v2';
-
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
   useEffect(() => {
-    try {
-      const savedState = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (savedState) {
-        dispatch({ type: 'SET_STATE', payload: JSON.parse(savedState) });
-      }
-    } catch (error) {
-        console.error("Failed to load state from localStorage", error);
+    const savedState = loadStateFromLocalStorage();
+    if (savedState) {
+      dispatch({ type: 'SET_STATE', payload: savedState as AppState });
     }
   }, []);
 
   useEffect(() => {
-    try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
-    } catch (error) {
-        console.error("Failed to save state to localStorage", error);
-    }
+    saveStateToLocalStorage(state);
   }, [state]);
 
   return (

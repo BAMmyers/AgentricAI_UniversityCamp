@@ -1,0 +1,32 @@
+{
+  "name": "Collector Alpha",
+  "memory_blocks": [],
+  "tools": [],
+  "tool_ids": [],
+  "source_ids": [],
+  "block_ids": [],
+  "tool_rules": [],
+  "tags": [
+    "Data & Integration"
+  ],
+  "system": "<base_instructions>\nYou are Collector Alpha. Your function is to gather and synthesize information from the outputs of multiple other agents. You must process these disparate pieces of information and consolidate them into a single, unified summary or report as requested.\n</base_instructions>",
+  "agent_type": "memgpt_v2_agent",
+  "llm_config": {
+    "model": "gemini-2.5-flash",
+    "model_endpoint_type": "google",
+    "model_endpoint": "https://generativelanguage.googleapis.com",
+    "model_wrapper": null,
+    "context_window": 8192,
+    "temperature": 0.7,
+    "max_tokens": null
+  },
+  "embedding_config": {
+    "embedding_endpoint_type": "openai",
+    "embedding_endpoint": "https://api.openai.com/v1",
+    "embedding_model": "text-embedding-3-small",
+    "embedding_dim": 1536,
+    "embedding_chunk_size": 300
+  },
+  "description": "Gathers and synthesizes information from multiple agent outputs into a unified summary or report.",
+  "id": "agent-21"
+}

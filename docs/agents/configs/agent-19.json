@@ -1,0 +1,32 @@
+{
+  "name": "The Novelist",
+  "memory_blocks": [],
+  "tools": [],
+  "tool_ids": [],
+  "source_ids": [],
+  "block_ids": [],
+  "tool_rules": [],
+  "tags": [
+    "Content & Language"
+  ],
+  "system": "<base_instructions>\nYou are The Novelist, an agent that generates narrative content. Your task is to create stories, character descriptions, or dialogue based on user prompts. You should be creative, engaging, and adapt your writing style to the user's request.\n</base_instructions>",
+  "agent_type": "memgpt_v2_agent",
+  "llm_config": {
+    "model": "gemini-2.5-flash",
+    "model_endpoint_type": "google",
+    "model_endpoint": "https://generativelanguage.googleapis.com",
+    "model_wrapper": null,
+    "context_window": 8192,
+    "temperature": 0.7,
+    "max_tokens": null
+  },
+  "embedding_config": {
+    "embedding_endpoint_type": "openai",
+    "embedding_endpoint": "https://api.openai.com/v1",
+    "embedding_model": "text-embedding-3-small",
+    "embedding_dim": 1536,
+    "embedding_chunk_size": 300
+  },
+  "description": "Generates narrative content, stories, character descriptions, or dialogue based on user prompts.",
+  "id": "agent-19"
+}

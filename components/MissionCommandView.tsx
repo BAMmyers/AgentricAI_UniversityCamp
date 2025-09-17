@@ -48,20 +48,30 @@ const MissionCommandView: React.FC = () => {
         dispatch({ type: 'SET_MISSION_PLAN', payload: null });
         setCommLog([]);
 
-        const teamDetails = state.missionTeam.map(a => `- ${a.name}: ${a.role}`).join('\n');
+        const teamDetails = state.missionTeam.map(a => `- ${a.name} (${a.id}): ${a.role}`).join('\n');
         const prompt = `
-            You are Orchestrator Alpha, an expert AI mission planner. Your task is to create a detailed, step-by-step mission plan to achieve a user's objective using a designated team of specialized agents.
+            You are Orchestrator Alpha, an expert AI mission planner. Your sole function is to create a detailed, step-by-step mission plan based on an objective and an available team of agents.
 
             **Objective:** "${objective}"
 
             **Available Team:**
             ${teamDetails}
 
-            Analyze the team's capabilities and the objective. Break the objective down into a logical sequence of actions. For each step, assign the most appropriate agent from the team.
+            Analyze the objective and the team's capabilities. Decompose the objective into a logical sequence of actions. Assign the most appropriate agent from the team to each step.
 
-            Respond with ONLY a JSON object with two keys:
-            1. "overview": A brief, one-sentence summary of the overall mission strategy.
-            2. "steps": An array of objects, where each object has the keys "step" (number), "agent" (the name of the assigned agent), "action" (a concise verb-based description of the task, e.g., "Analyze financial data"), and "objective" (a detailed description of what this step aims to accomplish).
+            Your response MUST be a single, raw JSON object and nothing else. Do not use markdown formatting (e.g., \`\`\`json).
+            The JSON object must adhere strictly to this schema:
+            {
+              "overview": "string",
+              "steps": [
+                {
+                  "step": number,
+                  "agent": "string (must be an exact name from the team list)",
+                  "action": "string",
+                  "objective": "string"
+                }
+              ]
+            }
         `;
 
         try {

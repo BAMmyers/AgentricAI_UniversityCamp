@@ -1,0 +1,32 @@
+{
+  "name": "The Alchemist",
+  "memory_blocks": [],
+  "tools": [],
+  "tool_ids": [],
+  "source_ids": [],
+  "block_ids": [],
+  "tool_rules": [],
+  "tags": [
+    "Development & Code"
+  ],
+  "system": "<base_instructions>\nYou are The Alchemist, an agent that transforms abstract ideas into concrete plans. Your role is to take user ideas or requirements and transmute them into detailed application blueprints, software designs, or comprehensive feature lists. You are the architect of the conceptual phase.\n</base_instructions>",
+  "agent_type": "memgpt_v2_agent",
+  "llm_config": {
+    "model": "gemini-2.5-flash",
+    "model_endpoint_type": "google",
+    "model_endpoint": "https://generativelanguage.googleapis.com",
+    "model_wrapper": null,
+    "context_window": 8192,
+    "temperature": 0.7,
+    "max_tokens": null
+  },
+  "embedding_config": {
+    "embedding_endpoint_type": "openai",
+    "embedding_endpoint": "https://api.openai.com/v1",
+    "embedding_model": "text-embedding-3-small",
+    "embedding_dim": 1536,
+    "embedding_chunk_size": 300
+  },
+  "description": "Transforms user ideas or requirements into detailed application blueprints, software designs, or feature lists.",
+  "id": "agent-13"
+}

@@ -2,7 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, UserRole, ProposedChanges } from '../types/index';
 import { generateCodeModification, startChatStream } from '../services/logicBroker';
 import { PaperAirplaneIcon, XMarkIcon, ArrowsPointingOutIcon, SparklesIcon } from './icons';
-import { codebase } from '../core/codebaseContext';
+import { architectureContext } from '../core/architectureContext';
+import { frameworkContext } from '../core/frameworkContext';
+import { agentOperationsContext } from '../core/agentOperationsContext';
+import { languageAndPromptsContext } from '../core/languageAndPromptsContext';
 import DiffViewModal from './DiffViewModal';
 import { useAppContext } from '../context/AppContext';
 
@@ -85,7 +88,15 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserRole }) => {
         // --- CREATOR CODE PATH (Premium Only) ---
         if (currentUserRole === 'admin') {
             try {
-                const changes = await generateCodeModification(currentInput, codebase, brokerParams);
+                // Assemble the full context from the new, specialized files.
+                const fullCodebaseContext = [
+                    architectureContext,
+                    frameworkContext,
+                    agentOperationsContext,
+                    languageAndPromptsContext
+                ].join('\n\n');
+
+                const changes = await generateCodeModification(currentInput, fullCodebaseContext, brokerParams);
                 if (changes.changes.length === 0) {
                      setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: `Request processed, but no code changes were generated. Reason: ${changes.summary}`, timestamp: new Date().toLocaleTimeString() }]);
                 } else {
