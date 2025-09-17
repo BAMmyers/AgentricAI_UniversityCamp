@@ -6,13 +6,15 @@ export type View =
   | 'studio'
   | 'agent-editor'
   | 'university'
-  | 'core'
   | 'gateway'
   | 'student-roster'
   | 'parent-teacher-console'
   | 'showcase'
   | 'account'
-  | 'student-dashboard';
+  | 'student-dashboard'
+  | 'system-optimization'
+  | 'security-sentinel'
+  | 'mission-command';
 
 export type UserRole = 'student' | 'parent' | 'teacher' | 'admin';
 export type SubscriptionPlan = 'free' | 'pro';
@@ -22,6 +24,7 @@ export interface User {
     email: string;
     role: UserRole;
     subscriptionPlan: SubscriptionPlan;
+    passwordHash?: string;
 }
 
 export interface CodeChange {
@@ -234,8 +237,24 @@ export interface SystemError {
     errorInfo: React.ErrorInfo;
 }
 
+export type SecurityEventType = 
+  | 'LOGIN_SUCCESS' 
+  | 'LOGIN_FAILURE' 
+  | 'LOGOUT' 
+  | 'USER_REGISTERED' 
+  | 'SYSTEM_ERROR_DETECTED'
+  | 'INTEGRITY_SCAN_STARTED'
+  | 'INTEGRITY_SCAN_COMPLETED';
+
+export interface SecurityLogEntry {
+    timestamp: string;
+    type: SecurityEventType;
+    details: string;
+}
+
 export interface AppState {
   currentUser: User | null;
+  users: User[];
   agents: Agent[];
   workflows: Workflow[];
   students: Student[];
@@ -247,4 +266,5 @@ export interface AppState {
   activeStudentId: string | null;
   missionTeam: ManifestAgent[];
   missionPlan: MissionPlan | null;
+  securityLog: SecurityLogEntry[];
 }

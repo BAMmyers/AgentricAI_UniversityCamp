@@ -121,7 +121,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveView }) => {
             icon={<BoltIcon className="w-12 h-12 mx-auto text-brand-cyan mb-4" />}
             title="System Optimization"
             description="Adjust system parameters and performance."
-            onClick={() => { /* Placeholder */}}
+            onClick={() => setActiveView('system-optimization')}
         />
       </div>
     </div>

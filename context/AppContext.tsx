@@ -1,10 +1,11 @@
 import React, { createContext, useReducer, useContext, useEffect } from 'react';
-import { Agent, Workflow, ManifestAgent, AppState, Student, ScheduleItem, UpdateStudentGoalsPayload, LogActivityPayload, ShowcasedProject, UpdateStudentProfilePayload, Toast, MissionPlan, User, UserRole, SubscriptionPlan, SystemError, MissionStep } from '../types/index';
+import { Agent, Workflow, ManifestAgent, AppState, Student, ScheduleItem, UpdateStudentGoalsPayload, LogActivityPayload, ShowcasedProject, UpdateStudentProfilePayload, Toast, MissionPlan, User, UserRole, SubscriptionPlan, SystemError, MissionStep, SecurityLogEntry } from '../types/index';
 import { BookOpenIcon, PaintBrushIcon } from '../components/icons';
 
 type Action =
   | { type: 'SET_STATE'; payload: AppState }
-  | { type: 'LOGIN'; payload: User }
+  | { type: 'LOGIN'; payload: { user: User, password?: string } }
+  | { type: 'REGISTER_USER'; payload: User }
   | { type: 'LOGOUT' }
   | { type: 'UPGRADE_PLAN' }
   | { type: 'UPDATE_AGENT'; payload: Agent }
@@ -26,10 +27,13 @@ type Action =
   | { type: 'HIDE_TOAST'; payload: number }
   | { type: 'SET_MISSION_PLAN'; payload: MissionPlan | null }
   | { type: 'UPDATE_MISSION_STEP_STATE'; payload: { step: number; status: MissionStep['status']; result?: string } }
-  | { type: 'SET_SYSTEM_ERROR', payload: SystemError | null };
+  | { type: 'SET_SYSTEM_ERROR', payload: SystemError | null }
+  | { type: 'CLEAR_SYSTEM_ERROR' }
+  | { type: 'LOG_SECURITY_EVENT'; payload: Omit<SecurityLogEntry, 'timestamp'> };
 
 const initialState: AppState = {
   currentUser: null,
+  users: [],
   agents: [
     {
       id: 'agent-d88b0aef-d4d0-4987-a2e4-62b1a136b761',
@@ -67,7 +71,12 @@ const initialState: AppState = {
   activeStudentId: null,
   missionTeam: [],
   missionPlan: null,
+  securityLog: [],
 };
+
+// Simple hash simulation for the frontend.
+// In a real app, this would be a one-way hash (like bcrypt) performed on a server.
+const hashPassword = (password: string) => `hashed_${password}`;
 
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
@@ -77,58 +86,110 @@ const appReducer = (state: AppState, action: Action): AppState => {
         return {
             ...initialState,
             ...loadedState,
+            users: loadedState.users || [],
             currentUser: loadedState.currentUser || null, // Persist user session
             students: loadedState.students || [],
             activeStudentId: loadedState.activeStudentId || null,
             showcasedProjects: loadedState.showcasedProjects || [],
+            securityLog: loadedState.securityLog || [],
             toasts: [], // Do not persist toasts
             missionPlan: null, // Do not persist mission plans
             systemError: null, // Do not persist errors
         };
-    case 'LOGIN':
-        // On student login, ensure they exist. If not, enroll them.
-        if (action.payload.role === 'student') {
-            const studentExists = state.students.some(s => s.id === action.payload.id);
-            if (!studentExists) {
-                // This is a simplified enrollment for login simulation
-                 const studentId = action.payload.id;
-                 const companionAgentId = `agent-companion-${studentId.slice(-6)}`;
+    case 'REGISTER_USER': {
+        const userExists = state.users.some(u => u.email.toLowerCase() === action.payload.email.toLowerCase());
+        if (userExists) return state; // Should not happen with UI flow
 
-                 const newCompanionAgent: Agent = {
-                     id: companionAgentId,
-                     name: `Companion Agent ${studentId.slice(-4)}`,
-                     identity: 'Tutor',
-                     model: 'gemini-standard',
-                     type: 'Companion',
-                     studentId: studentId,
-                     systemInstruction: 'You are a kind, patient, and encouraging tutor for a young, neurodiverse learner...',
-                     personality: { tone: 'playful', creativity: 'high', verbosity: 'concise' },
-                     tools: [],
-                     coreMemory: [],
-                 };
-                 const newStudent: Student = {
-                     id: studentId,
-                     companionAgentId: companionAgentId,
-                     schedule: [],
-                     preferences: { preferredTopics: ['dinosaurs', 'space'], learningStyle: 'visual' },
-                     parentGoals: [],
-                     teacherCurriculum: [],
-                     activityLog: [],
-                 };
+        const newUser = action.payload;
 
-                 return {
-                    ...state,
-                    currentUser: action.payload,
-                    students: [...state.students, newStudent],
-                    agents: [...state.agents, newCompanionAgent],
-                    activeStudentId: studentId,
-                 }
+        let newState: AppState = {
+            ...state,
+            users: [...state.users, newUser],
+            currentUser: newUser,
+            securityLog: [
+                { type: 'USER_REGISTERED', details: `New user registered: ${newUser.email} (Role: ${newUser.role})`, timestamp: new Date().toISOString() },
+                ...state.securityLog
+            ],
+        };
+
+        // If the new user is a student, create their companion agent and student profile.
+        if (newUser.role === 'student') {
+            const studentId = newUser.id;
+            const companionAgentId = `agent-companion-${studentId.slice(-6)}`;
+            const newCompanionAgent: Agent = {
+                id: companionAgentId,
+                name: `Companion Agent ${studentId.slice(-4)}`,
+                identity: 'Tutor',
+                model: 'gemini-standard',
+                type: 'Companion',
+                studentId: studentId,
+                systemInstruction: 'You are a kind, patient, and encouraging tutor for a young, neurodiverse learner...',
+                personality: { tone: 'playful', creativity: 'high', verbosity: 'concise' },
+                tools: [],
+                coreMemory: [],
+            };
+            const newStudent: Student = {
+                id: studentId,
+                companionAgentId: companionAgentId,
+                schedule: [],
+                preferences: { preferredTopics: ['dinosaurs', 'space'], learningStyle: 'visual' },
+                parentGoals: [],
+                teacherCurriculum: [],
+                activityLog: [],
+            };
+            newState = {
+                ...newState,
+                students: [...newState.students, newStudent],
+                agents: [...newState.agents, newCompanionAgent],
+                activeStudentId: studentId,
             }
-             return { ...state, currentUser: action.payload, activeStudentId: action.payload.id };
         }
-        return { ...state, currentUser: action.payload };
+        return newState;
+    }
+    case 'LOGIN': {
+        const { user } = action.payload; // Password validation now happens in the component.
+        const userInDb = state.users.find(u => u.email.toLowerCase() === user.email.toLowerCase());
+
+        if (!userInDb) return state; // Should not happen with UI flow.
+
+        // Successful login
+        let activeStudentId = state.activeStudentId;
+        if (userInDb.role === 'student') {
+            activeStudentId = userInDb.id;
+        } else if (userInDb.role !== 'admin') {
+            activeStudentId = null; 
+        }
+
+        return { 
+            ...state, 
+            currentUser: userInDb, 
+            activeStudentId,
+            securityLog: [
+                { type: 'LOGIN_SUCCESS', details: `User logged in: ${userInDb.email}`, timestamp: new Date().toISOString() },
+                ...state.securityLog
+            ]
+        };
+    }
+    case 'LOG_SECURITY_EVENT': {
+        return {
+            ...state,
+            securityLog: [
+                { ...action.payload, timestamp: new Date().toISOString() },
+                ...state.securityLog,
+            ],
+        };
+    }
     case 'LOGOUT':
-        return { ...state, currentUser: null, activeStudentId: null };
+        const userEmail = state.currentUser?.email || 'Unknown';
+        return { 
+            ...state, 
+            currentUser: null, 
+            activeStudentId: null,
+            securityLog: [
+                { type: 'LOGOUT', details: `User logged out: ${userEmail}`, timestamp: new Date().toISOString() },
+                ...state.securityLog
+            ]
+        };
     case 'UPGRADE_PLAN':
         if (!state.currentUser) return state;
         return {
@@ -166,6 +227,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
             missionTeam: state.missionTeam.filter(agent => agent.id !== action.payload)
         };
     case 'ENROLL_STUDENT': {
+        // This action is now for an admin/parent enrolling a new student, not for initial signup.
         const studentId = `student-${Date.now()}`;
         const companionAgentId = `agent-companion-${Date.now()}`;
 
@@ -195,20 +257,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
             activityLog: [],
         };
         
-        // Also log in the new student
-        const newStudentUser: User = {
-            id: studentId,
-            email: `student-${studentId.slice(-4)}@aau.edu`,
-            role: 'student',
-            subscriptionPlan: 'free'
-        };
-
         return {
             ...state,
-            currentUser: newStudentUser,
             students: [...state.students, newStudent],
             agents: [...state.agents, newCompanionAgent],
-            activeStudentId: studentId,
         };
     }
     case 'SET_ACTIVE_STUDENT_ID':
@@ -307,7 +359,17 @@ const appReducer = (state: AppState, action: Action): AppState => {
             }
         };
     case 'SET_SYSTEM_ERROR':
-        return { ...state, systemError: action.payload };
+        const errorMessage = action.payload.error.message;
+        return { 
+            ...state, 
+            systemError: action.payload,
+            securityLog: [
+                { type: 'SYSTEM_ERROR_DETECTED', details: `Bug Agent caught error: ${errorMessage}`, timestamp: new Date().toISOString() },
+                 ...state.securityLog,
+            ]
+        };
+    case 'CLEAR_SYSTEM_ERROR':
+        return { ...state, systemError: null };
     default:
       return state;
   }

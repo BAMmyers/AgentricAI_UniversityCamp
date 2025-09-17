@@ -6,7 +6,7 @@ import { generateContent } from '../services/geminiService';
 import { useCompanionAgentLogic } from '../hooks/useCompanionAgentLogic';
 
 // --- MODAL FOR ACTIVITY ---
-const ActivityModal: React.FC<{ item: ScheduleItem; content: any; onClose: () => void; isLoading: boolean; onShowcase: () => void; isShowcased: boolean; }> = ({ item, content, onClose, isLoading, onShowcase, isShowcased }) => (
+const ActivityModal: React.FC<{ item: ScheduleItem; content: any; onClose: () => void; isLoading: boolean; onShowcase: () => void; isShowcased: boolean; agentName: string; }> = ({ item, content, onClose, isLoading, onShowcase, isShowcased, agentName }) => (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
         <div className="bg-brand-gray border border-brand-border rounded-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <header className="flex justify-between items-center p-4 border-b border-brand-border">
@@ -17,7 +17,7 @@ const ActivityModal: React.FC<{ item: ScheduleItem; content: any; onClose: () =>
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center h-48">
                         <SparklesIcon className="w-12 h-12 text-brand-cyan animate-pulse" />
-                        <p className="mt-4 text-brand-text-secondary">Your agent is preparing the activity...</p>
+                        <p className="mt-4 text-brand-text-secondary">The '{agentName}' agent is preparing the activity...</p>
                     </div>
                 ) : (
                     <div>
@@ -182,6 +182,18 @@ const StudentDashboard: React.FC = () => {
         dispatch({ type: 'SHOW_TOAST', payload: { message: 'Project added to the showcase!', type: 'success' } });
         setActiveModalItem(null);
     };
+
+    const getAgentNameForWorkflow = (workflowId: string): string => {
+        const workflow = state.workflows.find(wf => wf.id === workflowId);
+        if (!workflow) return "Specialist";
+
+        // This logic infers the agent's name from the workflow's content.
+        // A more robust system might store the agent type directly on the schedule item.
+        if (workflow.name.toLowerCase().includes("story")) return "Novelist";
+        if (workflow.name.toLowerCase().includes("art")) return "Mad Scientist";
+        if (workflow.name.toLowerCase().includes("game")) return "Game Designer";
+        return "Tutor";
+    };
     
     if (!activeStudent || !companionAgent) {
         return <div className="p-6 text-center"><p>Loading student data...</p></div>;
@@ -189,10 +201,11 @@ const StudentDashboard: React.FC = () => {
 
     const currentModalItem = activeStudent.schedule.find(item => item.id === activeModalItem?.id);
     const isShowcased = activeModalItem ? state.showcasedProjects.some(p => p.id === activeModalItem.id) : false;
+    const modalAgentName = activeModalItem ? getAgentNameForWorkflow(activeModalItem.workflowId) : 'Specialist';
 
     return (
         <div className="p-6 bg-brand-dark min-h-full flex flex-col">
-            {activeModalItem && <ActivityModal item={currentModalItem!} content={modalContent} onClose={() => setActiveModalItem(null)} isLoading={isExecuting} onShowcase={handleShowcase} isShowcased={isShowcased} />}
+            {activeModalItem && <ActivityModal item={currentModalItem!} content={modalContent} onClose={() => setActiveModalItem(null)} isLoading={isExecuting} onShowcase={handleShowcase} isShowcased={isShowcased} agentName={modalAgentName}/>}
             <header className="flex justify-between items-center mb-8 flex-shrink-0">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Hello! I'm {companionAgent.identity}</h1>

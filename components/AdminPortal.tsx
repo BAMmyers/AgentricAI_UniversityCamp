@@ -4,13 +4,15 @@ import Studio from './Studio';
 import AgentEditor from './AgentEditor';
 import StudentView from './StudentView';
 import StudentDashboard from './StudentDashboard';
-import CoreView from './CoreView';
 import GatewayView from './GatewayView';
 import StudentRoster from './StudentRoster';
 import ParentTeacherConsole from './ParentTeacherConsole';
 import ShowcaseView from './ShowcaseView';
 import AccountView from './AccountView';
-import { BrainCircuitIcon, LayoutDashboardIcon, Cog8ToothIcon, AcademicCapIcon, CubeTransparentIcon, ServerStackIcon, UserGroupIcon, TrophyIcon, ArrowRightOnRectangleIcon, UserIcon, CreditCardIcon } from './icons';
+import SystemOptimizationView from './SystemOptimizationView';
+import SecuritySentinelView from './SecuritySentinelView';
+import MissionCommandView from './MissionCommandView';
+import { BrainCircuitIcon, LayoutDashboardIcon, Cog8ToothIcon, AcademicCapIcon, ServerStackIcon, UserGroupIcon, TrophyIcon, ArrowRightOnRectangleIcon, UserIcon, CreditCardIcon, BoltIcon, ShieldCheckIcon, CommandLineIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 // FIX: Import the centralized View type
 import { View } from '../types/index';
@@ -25,10 +27,12 @@ const AdminPortal: React.FC = () => {
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboardIcon className="w-5 h-5" /> },
     { id: 'student-roster', label: 'Agent Roster', icon: <UserGroupIcon className="w-5 h-5" /> },
     { id: 'showcase', label: 'Project Showcase', icon: <TrophyIcon className="w-5 h-5" /> },
-    { id: 'core', label: 'Core OS', icon: <CubeTransparentIcon className="w-5 h-5" /> },
+    { id: 'mission-command', label: 'Mission Command', icon: <CommandLineIcon className="w-5 h-5" /> },
+    { id: 'security-sentinel', label: 'Security Sentinel', icon: <ShieldCheckIcon className="w-5 h-5" /> },
     { id: 'studio', label: 'Studio', icon: <BrainCircuitIcon className="w-5 h-5" /> },
     { id: 'agent-editor', label: 'Agent Editor', icon: <Cog8ToothIcon className="w-5 h-5" /> },
     { id: 'gateway', label: 'Gateway', icon: <ServerStackIcon className="w-5 h-5" /> },
+    { id: 'system-optimization', label: 'Optimization', icon: <BoltIcon className="w-5 h-5" /> },
   ];
 
   const bottomNavItems = [
@@ -53,10 +57,14 @@ const AdminPortal: React.FC = () => {
         return <Studio setActiveView={setActiveView} />;
       case 'agent-editor':
         return <AgentEditor />;
-      case 'core':
-        return <CoreView />;
+      case 'mission-command':
+        return <MissionCommandView />;
+      case 'security-sentinel':
+        return <SecuritySentinelView />;
       case 'gateway':
         return <GatewayView />;
+      case 'system-optimization':
+        return <SystemOptimizationView />;
       case 'student-roster':
         return <StudentRoster navigateToConsole={navigateToConsole} />;
       case 'parent-teacher-console':

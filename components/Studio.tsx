@@ -16,28 +16,28 @@ const NODE_TEMPLATES: Record<NodeType, Omit<NodeData, 'id' | 'position'>> = {
         type: 'textInput', title: 'Text Input', inputs: [], outputs: [{ name: 'text', type: 'string' }], color: 'border-blue-500', icon: <DocumentTextIcon className="w-4 h-4"/>, content: { text: 'A friendly robot' }
     },
     storyGenerator: {
-        type: 'storyGenerator', title: 'Story Generator', inputs: [{ name: 'prompt', type: 'string' }], outputs: [{ name: 'story', type: 'string' }], color: 'border-pink-500', icon: <SparklesIcon className="w-4 h-4"/>, content: { systemInstruction: 'You are a creative storyteller for children.' }
+        type: 'storyGenerator', title: 'The Novelist', inputs: [{ name: 'prompt', type: 'string' }], outputs: [{ name: 'story', type: 'string' }], color: 'border-pink-500', icon: <SparklesIcon className="w-4 h-4"/>, content: { systemInstruction: 'You are a creative storyteller for children.' }
     },
     jsonExtractor: {
-        type: 'jsonExtractor', title: 'JSON Extractor', inputs: [{ name: 'text', type: 'string' }], outputs: [{ name: 'json', type: 'json' }], color: 'border-indigo-500', icon: <CodeBracketIcon className="w-4 h-4"/>, content: { schema: '{"character_name": "string", "setting": "string"}' }
+        type: 'jsonExtractor', title: 'Data Extractor', inputs: [{ name: 'text', type: 'string' }], outputs: [{ name: 'json', type: 'json' }], color: 'border-indigo-500', icon: <CodeBracketIcon className="w-4 h-4"/>, content: { schema: '{"character_name": "string", "setting": "string"}' }
     },
     imageGenerator: {
-        type: 'imageGenerator', title: 'Image Generator', inputs: [{ name: 'prompt', type: 'string' }], outputs: [{ name: 'image', type: 'image' }], color: 'border-teal-500', icon: <PhotoIcon className="w-4 h-4"/>, content: {}
+        type: 'imageGenerator', title: 'The Visualizer', inputs: [{ name: 'prompt', type: 'string' }], outputs: [{ name: 'image', type: 'image' }], color: 'border-teal-500', icon: <PhotoIcon className="w-4 h-4"/>, content: {}
     },
     agentDesigner: {
         type: 'agentDesigner', title: 'Agent Designer', inputs: [{ name: 'task', type: 'string' }], outputs: [{ name: 'agentDefinition', type: 'json' }], color: 'border-purple-500', icon: <UserPlusIcon className="w-4 h-4"/>, content: { systemInstruction: `You are an expert AI agent designer. Based on a user's task description, you will create a concise, unique name for a new agent and a detailed system instruction (persona). Respond ONLY with a JSON object with the keys "name" and "systemInstruction".` }
     },
     quizGenerator: {
-        type: 'quizGenerator', title: 'Quiz Generator', inputs: [{ name: 'topic', type: 'string' }], outputs: [{ name: 'quizJson', type: 'json' }], color: 'border-amber-500', icon: <QuestionMarkCircleIcon className="w-4 h-4"/>, content: { systemInstruction: 'You create educational multiple-choice quizzes about a given topic. You only respond with JSON.' }
+        type: 'quizGenerator', title: 'The Tutor (Quiz Mode)', inputs: [{ name: 'topic', type: 'string' }], outputs: [{ name: 'quizJson', type: 'json' }], color: 'border-amber-500', icon: <QuestionMarkCircleIcon className="w-4 h-4"/>, content: { systemInstruction: 'You create educational multiple-choice quizzes about a given topic. You only respond with JSON.' }
     },
     lessonPlanner: {
-        type: 'lessonPlanner', title: 'Lesson Planner', inputs: [{ name: 'objective', type: 'string' }], outputs: [{ name: 'plan', type: 'string' }], color: 'border-sky-500', icon: <ClipboardDocumentListIcon className="w-4 h-4"/>, content: { systemInstruction: 'You are an expert curriculum designer who writes concise lesson plans.' }
+        type: 'lessonPlanner', title: 'Curriculum Designer', inputs: [{ name: 'objective', type: 'string' }], outputs: [{ name: 'plan', type: 'string' }], color: 'border-sky-500', icon: <ClipboardDocumentListIcon className="w-4 h-4"/>, content: { systemInstruction: 'You are an expert curriculum designer who writes concise lesson plans.' }
     },
     textSummarizer: {
-        type: 'textSummarizer', title: 'Text Summarizer', inputs: [{ name: 'text', type: 'string' }], outputs: [{ name: 'summary', type: 'string' }], color: 'border-orange-500', icon: <DocumentMinusIcon className="w-4 h-4"/>, content: { systemInstruction: 'You are an expert at summarizing text concisely into a short paragraph.' }
+        type: 'textSummarizer', title: 'Content Summarizer', inputs: [{ name: 'text', type: 'string' }], outputs: [{ name: 'summary', type: 'string' }], color: 'border-orange-500', icon: <DocumentMinusIcon className="w-4 h-4"/>, content: { systemInstruction: 'You are an expert at summarizing text concisely into a short paragraph.' }
     },
      webSearch: {
-        type: 'webSearch', title: 'Web Search', inputs: [{ name: 'query', type: 'string' }], outputs: [{ name: 'results', type: 'string' }, { name: 'sources', type: 'json' }], color: 'border-cyan-500', icon: <GlobeAltIcon className="w-4 h-4"/>, content: {}
+        type: 'webSearch', title: 'Web Crawler', inputs: [{ name: 'query', type: 'string' }], outputs: [{ name: 'results', type: 'string' }, { name: 'sources', type: 'json' }], color: 'border-cyan-500', icon: <GlobeAltIcon className="w-4 h-4"/>, content: {}
     },
     dataDisplay: {
         type: 'dataDisplay', title: 'Data Display', inputs: [{ name: 'data', type: 'any' }], outputs: [], color: 'border-gray-500', icon: <EyeIcon className="w-4 h-4"/>, content: {}
@@ -449,8 +449,8 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
 const NodeLibrary: React.FC<{onAddNode: (type: NodeType) => void}> = ({onAddNode}) => {
     return (
         <div className="w-64 bg-brand-gray p-4 flex flex-col h-full border-r border-brand-border">
-            <h2 className="text-lg font-bold text-white mb-4">Node Library</h2>
-            <input type="text" placeholder="Search nodes..." className="w-full bg-brand-light-gray border border-brand-border rounded-md px-2 py-1 mb-4 text-sm" />
+            <h2 className="text-lg font-bold text-white mb-4">Agent & Node Library</h2>
+            <input type="text" placeholder="Search agents..." className="w-full bg-brand-light-gray border border-brand-border rounded-md px-2 py-1 mb-4 text-sm" />
             <div className="overflow-y-auto space-y-4 text-sm">
                 <div>
                     <h3 className="font-semibold text-brand-text-secondary mb-2">INPUT</h3>
@@ -459,15 +459,22 @@ const NodeLibrary: React.FC<{onAddNode: (type: NodeType) => void}> = ({onAddNode
                     </ul>
                 </div>
                  <div>
-                    <h3 className="font-semibold text-brand-text-secondary mb-2">AI</h3>
+                    <h3 className="font-semibold text-brand-text-secondary mb-2">CONTENT & LANGUAGE</h3>
                     <ul className="space-y-1">
-                        <li onClick={() => onAddNode('storyGenerator')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><SparklesIcon className="w-4 h-4"/> Story Generator</li>
-                        <li onClick={() => onAddNode('jsonExtractor')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><CodeBracketIcon className="w-4 h-4"/> JSON Extractor</li>
-                        <li onClick={() => onAddNode('imageGenerator')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><PhotoIcon className="w-4 h-4"/> Image Generator</li>
+                        <li onClick={() => onAddNode('storyGenerator')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><SparklesIcon className="w-4 h-4"/> The Novelist</li>
+                        <li onClick={() => onAddNode('imageGenerator')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><PhotoIcon className="w-4 h-4"/> The Visualizer</li>
+                         <li onClick={() => onAddNode('textSummarizer')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><DocumentMinusIcon className="w-4 h-4"/> Content Summarizer</li>
                     </ul>
                 </div>
                  <div>
-                    <h3 className="font-semibold text-brand-text-secondary mb-2">CUSTOM AGENTS</h3>
+                    <h3 className="font-semibold text-brand-text-secondary mb-2">DATA & INTEGRATION</h3>
+                     <ul className="space-y-1">
+                        <li onClick={() => onAddNode('jsonExtractor')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><CodeBracketIcon className="w-4 h-4"/> Data Extractor</li>
+                        <li onClick={() => onAddNode('webSearch')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><GlobeAltIcon className="w-4 h-4"/> Web Crawler</li>
+                    </ul>
+                </div>
+                 <div>
+                    <h3 className="font-semibold text-brand-text-secondary mb-2">DEVELOPMENT & CODE</h3>
                     <ul className="space-y-1">
                         <li onClick={() => onAddNode('agentDesigner')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><UserPlusIcon className="w-4 h-4"/> Agent Designer</li>
                     </ul>
@@ -475,20 +482,8 @@ const NodeLibrary: React.FC<{onAddNode: (type: NodeType) => void}> = ({onAddNode
                  <div>
                     <h3 className="font-semibold text-brand-text-secondary mb-2">EDUCATION</h3>
                     <ul className="space-y-1">
-                        <li onClick={() => onAddNode('quizGenerator')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><QuestionMarkCircleIcon className="w-4 h-4"/> Quiz Generator</li>
-                        <li onClick={() => onAddNode('lessonPlanner')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><ClipboardDocumentListIcon className="w-4 h-4"/> Lesson Planner</li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 className="font-semibold text-brand-text-secondary mb-2">TEXT</h3>
-                    <ul className="space-y-1">
-                        <li onClick={() => onAddNode('textSummarizer')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><DocumentMinusIcon className="w-4 h-4"/> Text Summarizer</li>
-                    </ul>
-                </div>
-                 <div>
-                    <h3 className="font-semibold text-brand-text-secondary mb-2">RESEARCH</h3>
-                    <ul className="space-y-1">
-                         <li onClick={() => onAddNode('webSearch')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><GlobeAltIcon className="w-4 h-4"/> Web Search</li>
+                        <li onClick={() => onAddNode('quizGenerator')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><QuestionMarkCircleIcon className="w-4 h-4"/> The Tutor (Quiz Mode)</li>
+                        <li onClick={() => onAddNode('lessonPlanner')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><ClipboardDocumentListIcon className="w-4 h-4"/> Curriculum Designer</li>
                     </ul>
                 </div>
                 <div>
