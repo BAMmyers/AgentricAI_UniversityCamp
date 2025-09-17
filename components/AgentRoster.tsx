@@ -1,9 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { manifestAgents } from '../core/agentManifest';
-// FIX: Replaced the non-existent 'ViewfinderCircleIcon' with 'DocumentMagnifyingGlassIcon'.
 import { UserCircleIcon, SignalIcon, DocumentMagnifyingGlassIcon } from './icons';
-// FIX: Corrected the import path for the 'View' type to point to the centralized 'types/index.ts' file.
 import { View } from '../types/index';
 
 interface AgentRosterProps {

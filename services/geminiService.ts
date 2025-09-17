@@ -89,9 +89,6 @@ export async function generateContent(
     }
 
     try {
-        // FIX: The config logic was updated to prevent sending responseMimeType when googleSearch is used,
-        // which is against the API guidelines and can cause errors. The logic for detecting a JSON
-        // request was also made more robust.
         const config: any = {
             ...(params.systemInstruction && { systemInstruction: params.systemInstruction }),
         };

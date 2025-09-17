@@ -3,7 +3,6 @@ import { useAppContext } from '../context/AppContext';
 import { manifestAgents } from '../core/agentManifest';
 import { ArrowUturnLeftIcon, BookOpenIcon, Cog6ToothIcon, CubeTransparentIcon, LightBulbIcon } from './icons';
 import { AVAILABLE_TOOLS } from '../core/tools';
-// FIX: The import path for the 'View' type was corrected to point to the centralized 'types/index.ts' file.
 import { View } from '../types/index';
 
 interface AgentDetailViewProps {

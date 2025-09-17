@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { PlusIcon, PlayIcon, TrashIcon, CodeBracketIcon, BookOpenIcon, BeakerIcon, GlobeAltIcon, CommandLineIcon, ArrowDownTrayIcon, ArrowUpTrayIcon, EyeIcon, PhotoIcon, ChatBubbleBottomCenterTextIcon, DocumentTextIcon, CpuIcon, SparklesIcon, QuestionMarkCircleIcon, ClipboardDocumentListIcon, DocumentMinusIcon, UserPlusIcon, PencilSquareIcon, InformationCircleIcon, XCircleIcon, CheckCircleIcon } from './icons';
+import { PlusIcon, PlayIcon, TrashIcon, CodeBracketIcon, BookOpenIcon, BeakerIcon, GlobeAltIcon, CommandLineIcon, ArrowDownTrayIcon, ArrowUpTrayIcon, EyeIcon, PhotoIcon, ChatBubbleBottomCenterTextIcon, DocumentTextIcon, CpuIcon, SparklesIcon, QuestionMarkCircleIcon, ClipboardDocumentListIcon, DocumentMinusIcon, UserPlusIcon, PencilSquareIcon, InformationCircleIcon, XCircleIcon, CheckCircleIcon, ArrowPathIcon } from './icons';
 import { View } from '../types/index';
 import { useAppContext } from '../context/AppContext';
 import { NodeData, Connection, Point, NodeType, Workflow, Agent } from '../types/index';
@@ -26,6 +26,9 @@ const NODE_TEMPLATES: Record<NodeType, Omit<NodeData, 'id' | 'position'>> = {
     },
     agentDesigner: {
         type: 'agentDesigner', title: 'Agent Designer', inputs: [{ name: 'task', type: 'string' }], outputs: [{ name: 'agentDefinition', type: 'json' }], color: 'border-purple-500', icon: <UserPlusIcon className="w-4 h-4"/>, content: { systemInstruction: `You are an expert AI agent designer. Based on a user's task description, you will create a concise, unique name for a new agent and a detailed system instruction (persona). Respond ONLY with a JSON object with the keys "name" and "systemInstruction".` }
+    },
+    pythonInterpreter: {
+        type: 'pythonInterpreter', title: 'Python Interpreter', inputs: [{ name: 'code', type: 'string' }], outputs: [{ name: 'result', type: 'string' }], color: 'border-emerald-500', icon: <CommandLineIcon className="w-4 h-4"/>, content: { code: 'print("Hello, AgentricAI!")' }
     },
     quizGenerator: {
         type: 'quizGenerator', title: 'The Tutor (Quiz Mode)', inputs: [{ name: 'topic', type: 'string' }], outputs: [{ name: 'quizJson', type: 'json' }], color: 'border-amber-500', icon: <QuestionMarkCircleIcon className="w-4 h-4"/>, content: { systemInstruction: 'You are an expert tutor specializing in creating educational multiple-choice quizzes for young learners. For any given topic, you MUST generate a JSON array of exactly 3 questions. Each question object must adhere strictly to this schema: {"question": "string", "options": ["string", "string", "string"], "answer": "string"}. You MUST respond with ONLY the raw JSON array, with absolutely no explanations or markdown formatting.' }
@@ -64,16 +67,10 @@ const getCurvePath = (startPos: Point, endPos: Point): string => {
 // --- NODE COMPONENT ---
 const NodeComponent: React.FC<{ data: NodeData; onNodeMouseDown: (e: React.MouseEvent, nodeId: string) => void; onPortMouseDown: (e: React.MouseEvent, nodeId: string, portName: string, type: 'input' | 'output') => void; onPortMouseUp: (e: React.MouseEvent, nodeId: string, portName: string, type: 'input' | 'output') => void; onContentChange: (nodeId: string, content: any) => void; onCreateAgent: (definition: any) => void; }> = ({ data, onNodeMouseDown, onPortMouseDown, onPortMouseUp, onContentChange, onCreateAgent }) => (
     <div
-        className={`group absolute bg-brand-gray border-2 ${data.status === 'error' ? 'border-red-500 shadow-lg shadow-red-500/30 ring-2 ring-red-500' : data.color} rounded-md flex flex-col select-none transition-all duration-200 ${data.status === 'running' ? 'shadow-lg shadow-yellow-400/50 scale-105' : ''}`}
+        className={`absolute bg-brand-gray border-2 ${data.status === 'error' ? 'border-red-500 shadow-lg shadow-red-500/30' : data.color} rounded-md flex flex-col select-none transition-all duration-200 ${data.status === 'running' ? 'shadow-lg shadow-yellow-400/50 scale-105' : ''}`}
         style={{ width: `${NODE_WIDTH}px`, top: data.position.y, left: data.position.x, cursor: 'grab' }}
         onMouseDown={(e) => onNodeMouseDown(e, data.id)}
     >
-        {data.error && (
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-max max-w-xs p-2 bg-red-600 text-white text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-normal z-10 pointer-events-none">
-                <p className="font-bold">Error:</p>
-                {data.error}
-            </div>
-        )}
         <div className="bg-brand-light-gray p-2 rounded-t-md text-white font-bold text-xs flex items-center justify-between">
             <div className="flex items-center gap-2">{data.icon}<span>{data.title}</span></div>
             {data.status === 'running' && <CpuIcon className="w-4 h-4 text-yellow-400 animate-spin" />}
@@ -94,17 +91,24 @@ const NodeComponent: React.FC<{ data: NodeData; onNodeMouseDown: (e: React.Mouse
                 </div>
             ))}
              <div className="mt-2 text-sm">
-                { data.type === 'textInput' && <textarea defaultValue={data.content?.text} onChange={e => onContentChange(data.id, { text: e.target.value })} className="bg-brand-dark border border-brand-border rounded px-2 py-1 w-full text-sm h-16 resize-none" /> }
-                { data.type === 'dataDisplay' && <pre className="text-xs p-2 bg-brand-dark rounded text-green-300 overflow-auto max-h-40">{JSON.stringify(data.outputData, null, 2) || 'No data'}</pre> }
-                { data.type === 'imageDisplay' && data.outputData?.startsWith('data:image') && <img src={data.outputData} alt="Generated" className="rounded-md"/>}
-                { data.type === 'agentDesigner' && data.status === 'success' && (
-                    <div className="p-2 bg-brand-dark rounded">
-                        <p className="font-bold text-brand-text">{data.outputData.name}</p>
-                        <p className="text-xs text-brand-text-secondary italic mt-1 truncate">{data.outputData.systemInstruction}</p>
-                        <button onClick={() => onCreateAgent(data.outputData)} className="mt-3 w-full bg-brand-primary hover:bg-brand-accent text-white px-3 py-1.5 rounded-md flex items-center justify-center gap-1 text-xs">
-                           <PencilSquareIcon className="w-4 h-4" /> Create & Edit Agent
-                        </button>
-                    </div>
+                { data.status === 'error' ? (
+                     <pre className="text-xs p-2 bg-brand-dark rounded text-red-400 overflow-auto max-h-40 whitespace-pre-wrap">{data.error}</pre>
+                ) : (
+                <>
+                    { data.type === 'textInput' && <textarea defaultValue={data.content?.text} onChange={e => onContentChange(data.id, { text: e.target.value })} className="bg-brand-dark border border-brand-border rounded px-2 py-1 w-full text-sm h-16 resize-none" /> }
+                    { data.type === 'pythonInterpreter' && <textarea defaultValue={data.content?.code} onChange={e => onContentChange(data.id, { code: e.target.value })} className="font-mono bg-brand-dark border border-brand-border rounded px-2 py-1 w-full text-xs h-16 resize-none" /> }
+                    { data.type === 'dataDisplay' && <pre className="text-xs p-2 bg-brand-dark rounded text-green-300 overflow-auto max-h-40">{JSON.stringify(data.outputData, null, 2) || 'No data'}</pre> }
+                    { data.type === 'imageDisplay' && data.outputData?.startsWith('data:image') && <img src={data.outputData} alt="Generated" className="rounded-md"/>}
+                    { data.type === 'agentDesigner' && data.status === 'success' && (
+                        <div className="p-2 bg-brand-dark rounded">
+                            <p className="font-bold text-brand-text">{data.outputData.name}</p>
+                            <p className="text-xs text-brand-text-secondary italic mt-1 truncate">{data.outputData.systemInstruction}</p>
+                            <button onClick={() => onCreateAgent(data.outputData)} className="mt-3 w-full bg-brand-primary hover:bg-brand-accent text-white px-3 py-1.5 rounded-md flex items-center justify-center gap-1 text-xs">
+                               <PencilSquareIcon className="w-4 h-4" /> Create & Edit Agent
+                            </button>
+                        </div>
+                    )}
+                </>
                 )}
              </div>
         </div>
@@ -158,6 +162,7 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
     const [drawingConnection, setDrawingConnection] = useState<{ fromNodeId: string; fromOutput: string; fromPosition: Point } | null>(null);
     const [mousePosition, setMousePosition] = useState<Point>({ x: 0, y: 0 });
     const [executionLogs, setExecutionLogs] = useState<LogEntry[]>([]);
+    const [hasExecutionError, setHasExecutionError] = useState(false);
     const canvasRef = useRef<HTMLDivElement>(null);
 
     const updateWorkflow = (nodes: NodeData[], connections: Connection[]) => {
@@ -203,6 +208,7 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
 
     const runWorkflow = async () => {
         setExecutionLogs([]);
+        setHasExecutionError(false);
         log('Starting workflow execution...', 'info');
         
         let nodesToProcess = activeWorkflow.nodes.filter(n => n.inputs.length === 0);
@@ -258,6 +264,18 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
                         log('Image generation is not implemented. Using placeholder.', 'info');
                         outputData = { image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' };
                         break;
+                    case 'pythonInterpreter':
+                        const codeToRun = inputs.code !== undefined ? inputs.code : node.content?.code;
+                        if (!codeToRun || typeof codeToRun !== 'string' || codeToRun.trim() === '') {
+                            throw new Error("Python node requires code to execute, either from its text area or an input connection.");
+                        }
+                        if (codeToRun.includes('raise Exception')) {
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            throw new Error("Simulated Python Error: User-defined exception was raised.");
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        outputData = { result: `[Simulated OK]\nExecuted:\n${codeToRun}\n\nReturned:\n'Execution successful.'` };
+                        break;
                     case 'quizGenerator':
                         const quizPrompt = `Create a 3-question multiple-choice quiz about "${inputs.topic}".`;
                         const { text: quizJsonString } = await generateContent({ prompt: quizPrompt, systemInstruction: node.content?.systemInstruction }, brokerParams);
@@ -289,9 +307,11 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
                 updateWorkflow(currentNodes, activeWorkflow.connections);
                 return finalOutput;
             } catch (error) {
+                setHasExecutionError(true);
                 const errorMessage = error instanceof Error ? error.message : String(error);
+                const bugReport = `Bug Agent Report: ${errorMessage}`;
                 log(`ERROR executing node ${node.title}: ${errorMessage}`, 'error');
-                currentNodes = currentNodes.map(n => n.id === node.id ? { ...n, status: 'error', error: errorMessage } : n);
+                currentNodes = currentNodes.map(n => n.id === node.id ? { ...n, status: 'error', error: bugReport } : n);
                 updateWorkflow(currentNodes, activeWorkflow.connections);
                 throw error;
             }
@@ -325,6 +345,20 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
             }
         }
         log('Workflow execution finished.', 'success');
+    };
+
+    const handleRetryWorkflow = () => {
+        log('Mechanic Agent dispatched to reset and retry workflow.', 'info');
+        // FIX: Explicitly type `resetNodes` as NodeData[] to prevent TypeScript from widening the `status` property to a generic string.
+        const resetNodes: NodeData[] = activeWorkflow.nodes.map(n => 
+            n.status === 'error' ? { ...n, status: 'idle', error: undefined, outputData: undefined } : n
+        );
+        // Update the state with the reset nodes first
+        updateWorkflow(resetNodes, activeWorkflow.connections);
+        // Then, re-run the workflow after a short delay to ensure state update has propagated
+        setTimeout(() => {
+            runWorkflow();
+        }, 100);
     };
 
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -400,7 +434,11 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
                 <h1 className="text-xl font-bold text-white">AgentricAI Studio</h1>
                 <div className="flex items-center gap-2">
                     <button onClick={() => { dispatch({type: 'SET_ACTIVE_AGENT_ID', payload: null}); setActiveView('agent-editor')}} className="bg-brand-primary hover:bg-brand-accent text-white px-3 py-1.5 rounded-md flex items-center gap-1"><PlusIcon className="w-4 h-4" /> Define New Agent</button>
-                    <button onClick={runWorkflow} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md flex items-center gap-1"><PlayIcon className="w-4 h-4" /> Run Workflow</button>
+                    {hasExecutionError ? (
+                        <button onClick={handleRetryWorkflow} className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded-md flex items-center gap-1"><ArrowPathIcon className="w-4 h-4" /> Deploy Mechanic Agent to Retry</button>
+                    ) : (
+                        <button onClick={runWorkflow} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md flex items-center gap-1"><PlayIcon className="w-4 h-4" /> Run Workflow</button>
+                    )}
                     <button onClick={clearWorkflow} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md flex items-center gap-1"><TrashIcon className="w-4 h-4" /> Clear Canvas</button>
                 </div>
             </header>
@@ -478,6 +516,7 @@ const NodeLibrary: React.FC<{onAddNode: (type: NodeType) => void}> = ({onAddNode
                     <h3 className="font-semibold text-brand-text-secondary mb-2">DEVELOPMENT & CODE</h3>
                     <ul className="space-y-1">
                         <li onClick={() => onAddNode('agentDesigner')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><UserPlusIcon className="w-4 h-4"/> Agent Designer</li>
+                        <li onClick={() => onAddNode('pythonInterpreter')} className="cursor-pointer p-2 hover:bg-brand-light-gray rounded-md flex items-center gap-2"><CommandLineIcon className="w-4 h-4"/> Python Interpreter</li>
                     </ul>
                 </div>
                  <div>

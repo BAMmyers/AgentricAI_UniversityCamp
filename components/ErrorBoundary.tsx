@@ -31,7 +31,7 @@ class ErrorBoundary extends Component<Props, State> {
   public render() {
     // The actual fallback UI is rendered in App.tsx based on the global state.
     // This component's role is just to catch the error and update the state.
-    // We don't render the children if there's an error to prevent a render loop.
+    // If an error is caught, we render nothing here, allowing App.tsx to render the SystemAnomalyView instead of the children.
     if (this.state.hasError) {
       return null;
     }

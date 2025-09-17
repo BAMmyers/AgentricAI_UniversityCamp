@@ -7,10 +7,8 @@ import TeacherLectureView from './TeacherLectureView';
 import CurriculumManagerView from './CurriculumManagerView';
 import { UserGroupIcon, TrophyIcon, ArrowRightOnRectangleIcon, CreditCardIcon, StarIcon, BookOpenIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
-// FIX: Import the centralized View type
 import { View } from '../types/index';
 
-// FIX: Removed local ParentTeacherView type in favor of centralized View type
 const ParentTeacherPortal: React.FC = () => {
     const { dispatch, state } = useAppContext();
     const [activeView, setActiveView] = useState<View>('student-roster');

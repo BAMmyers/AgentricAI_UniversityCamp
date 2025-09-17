@@ -1,5 +1,4 @@
 import React from 'react';
-// FIX: Changed import path for View type
 import { View } from '../types/index';
 import { ShieldCheckIcon, BrainCircuitIcon, BoltIcon, UserGroupIcon, IdentificationIcon, LockClosedIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
@@ -36,7 +35,6 @@ const StudentView: React.FC<StudentViewProps> = ({ setActiveView }) => {
 
     const handleEnroll = () => {
         dispatch({ type: 'ENROLL_STUDENT' });
-        // FIX: Changed to a valid view for the admin portal.
         setActiveView('student-roster');
     };
 

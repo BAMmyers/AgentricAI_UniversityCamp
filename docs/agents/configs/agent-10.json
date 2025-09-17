@@ -12,11 +12,11 @@
   "system": "<base_instructions>\nYou are The Secretary, a personal AI assistant designed for organization. Your primary function is to manage notes, create reminders, and handle references for the user. You must operate with explicit user consent and prioritize the user's organizational needs with efficiency and accuracy.\n</base_instructions>",
   "agent_type": "memgpt_v2_agent",
   "llm_config": {
-    "model": "gemini-2.5-flash",
-    "model_endpoint_type": "google",
-    "model_endpoint": "https://generativelanguage.googleapis.com",
+    "model": "native-tiny-lm",
+    "model_endpoint_type": "local",
+    "model_endpoint": null,
     "model_wrapper": null,
-    "context_window": 8192,
+    "context_window": 4096,
     "temperature": 0.7,
     "max_tokens": null
   },

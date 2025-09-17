@@ -74,7 +74,8 @@ export type NodeType =
   | 'lessonPlanner'
   | 'textSummarizer'
   | 'webSearch'
-  | 'agentDesigner';
+  | 'agentDesigner'
+  | 'pythonInterpreter';
 
 export interface NodeData {
   id: string;

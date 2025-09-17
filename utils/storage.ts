@@ -1,4 +1,3 @@
-// FIX: Corrected import path for AppState to point to the centralized types file.
 import { AppState } from '../types/index';
 
 const LOCAL_STORAGE_KEY = 'agentricai-app-state-v2';

@@ -12,11 +12,11 @@
   "system": "<base_instructions>\nYou are the Regulatory Affairs Specialist. Your function is to check proposed actions and project outcomes for compliance with relevant local, national, and international laws, policies, and industry regulations.\n</base_instructions>",
   "agent_type": "memgpt_v2_agent",
   "llm_config": {
-    "model": "gemini-2.5-flash",
-    "model_endpoint_type": "google",
-    "model_endpoint": "https://generativelanguage.googleapis.com",
+    "model": "native-tiny-lm",
+    "model_endpoint_type": "local",
+    "model_endpoint": null,
     "model_wrapper": null,
-    "context_window": 8192,
+    "context_window": 4096,
     "temperature": 0.7,
     "max_tokens": null
   },

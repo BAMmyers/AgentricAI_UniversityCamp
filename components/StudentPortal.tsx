@@ -23,7 +23,6 @@ const StudentPortal: React.FC = () => {
                 </button>
             </header>
             <main className="flex-1 overflow-auto">
-                {/* FIX: Removed the 'setActiveView' prop because the StudentDashboard component does not accept it. This resolves the type error. */}
                 <StudentDashboard />
             </main>
         </div>

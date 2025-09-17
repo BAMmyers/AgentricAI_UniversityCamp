@@ -44,7 +44,8 @@ export async function generateContent(
     if (isPremium) {
         return geminiService.generateContent(params);
     } else {
-        return localAgentProcessor.generateLocalContent(params.prompt);
+        // Pass the full params object so the local processor can check for premium features like useGoogleSearch
+        return localAgentProcessor.generateLocalContent(params);
     }
 }
 

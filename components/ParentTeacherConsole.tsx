@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-// FIX: Changed import path for View type
 import { View } from '../types/index';
 import { ArrowUturnLeftIcon, ClipboardDocumentCheckIcon, PlusIcon, TrashIcon, InformationCircleIcon } from './icons';
 

@@ -15,10 +15,8 @@ import SecuritySentinelView from './SecuritySentinelView';
 import MissionCommandView from './MissionCommandView';
 import { BrainCircuitIcon, LayoutDashboardIcon, Cog8ToothIcon, AcademicCapIcon, ServerStackIcon, UserGroupIcon, TrophyIcon, ArrowRightOnRectangleIcon, UserIcon, CreditCardIcon, BoltIcon, ShieldCheckIcon, CommandLineIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
-// FIX: Import the centralized View type
 import { View } from '../types/index';
 
-// FIX: Removed local AdminView type in favor of centralized View type
 const AdminPortal: React.FC = () => {
   const { dispatch, state } = useAppContext();
   const [activeView, setActiveView] = useState<View>('dashboard');

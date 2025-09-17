@@ -1,6 +1,5 @@
 import React from 'react';
 import { ToolDefinition } from '../types/index';
-// FIX: Changed JSX to React.createElement to be valid in a .ts file.
 import { DocumentMagnifyingGlassIcon, BookOpenIcon, CommandLineIcon, GlobeAltIcon, ArrowPathIcon } from '../components/icons';
 
 export const AVAILABLE_TOOLS: ToolDefinition[] = [

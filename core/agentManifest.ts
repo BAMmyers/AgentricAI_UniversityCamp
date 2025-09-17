@@ -517,8 +517,6 @@ function parseManifest(): ManifestAgent[] {
 
     lines.forEach(line => {
       if (line.startsWith('Agent:')) {
-        // FIX: The regex was using double backslashes to escape parentheses, 
-        // which is incorrect for regex literals. It should be a single backslash.
         const match = line.match(/Agent: (.*) \((.*)\)/);
         if (match) {
           agentData.name = match[1].trim();

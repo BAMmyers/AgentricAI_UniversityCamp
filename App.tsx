@@ -7,13 +7,17 @@ import AdminPortal from './components/AdminPortal';
 import ToastContainer from './components/Toast';
 import { ChatWidget } from './components/ChatWidget';
 import ErrorBoundary from './components/ErrorBoundary';
-import SystemStatusBar from './components/SystemStatusBar';
+import SystemAnomalyView from './components/SystemAnomalyView';
 
 const App: React.FC = () => {
   const { state } = useAppContext();
   const { currentUser, systemError } = state;
 
   const renderPortal = () => {
+    if (systemError) {
+      return <SystemAnomalyView />;
+    }
+    
     if (!currentUser) {
       return <LoginView />;
     }
@@ -33,7 +37,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-brand-dark text-brand-text font-sans">
-      <SystemStatusBar />
       <ErrorBoundary>
         {renderPortal()}
       </ErrorBoundary>
