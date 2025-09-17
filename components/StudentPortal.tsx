@@ -1,5 +1,5 @@
 import React from 'react';
-import StudentDashboard from './StudentDashboard';
+import EchoApp from './echo/EchoApp';
 import { useAppContext } from '../context/AppContext';
 import { ArrowRightOnRectangleIcon } from './icons';
 
@@ -12,18 +12,18 @@ const StudentPortal: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col">
-            <header className="flex justify-end p-2 bg-brand-dark flex-shrink-0">
+        <div className="min-h-screen flex flex-col bg-black">
+            <header className="flex justify-end p-2 bg-neutral-950 flex-shrink-0 border-b-4 border-dotted border-neutral-800">
                  <button 
                     onClick={handleLogout} 
-                    className="p-2 rounded-lg text-brand-text-secondary hover:bg-brand-light-gray hover:text-white" 
+                    className="p-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white" 
                     title="Logout"
                 >
                     <ArrowRightOnRectangleIcon className="w-5 h-5"/>
                 </button>
             </header>
             <main className="flex-1 overflow-auto">
-                <StudentDashboard />
+                <EchoApp />
             </main>
         </div>
     );

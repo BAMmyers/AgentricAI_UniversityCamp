@@ -1,44 +1,6 @@
 import React, { createContext, useReducer, useContext, useEffect } from 'react';
-import { Agent, Workflow, ManifestAgent, AppState, Student, ScheduleItem, UpdateStudentGoalsPayload, LogActivityPayload, ShowcasedProject, UpdateStudentProfilePayload, Toast, MissionPlan, User, UserRole, SubscriptionPlan, SystemError, MissionStep, SecurityLogEntry, LiveLectureSession, CurriculumItem } from '../types/index';
-import { BookOpenIcon, PaintBrushIcon } from '../components/icons';
+import { Agent, AppState, Student, ScheduleItem, UpdateStudentGoalsPayload, LogActivityPayload, ShowcasedProject, UpdateStudentProfilePayload, Toast, User, UserRole, SubscriptionPlan, SystemError, SecurityLogEntry, CurriculumItem, Action, LiveLectureSession, MissionPlan, ManifestAgent, MissionStepStatus } from '../types/index';
 import { saveStateToLocalStorage, loadStateFromLocalStorage } from '../utils/storage';
-
-type Action =
-  | { type: 'SET_STATE'; payload: AppState }
-  | { type: 'LOGIN'; payload: { user: User, password?: string } }
-  | { type: 'REGISTER_USER'; payload: { email: string; passwordHash: string; role: UserRole; subscriptionPlan: SubscriptionPlan; preferences?: Student['preferences'] } }
-  | { type: 'LOGOUT' }
-  | { type: 'START_ENROLLMENT' }
-  | { type: 'CANCEL_ENROLLMENT' }
-  | { type: 'UPGRADE_PLAN' }
-  | { type: 'UPDATE_AGENT'; payload: Agent }
-  | { type: 'ADD_AGENT'; payload: Agent }
-  | { type: 'SET_ACTIVE_AGENT_ID'; payload: string | null }
-  | { type: 'UPDATE_WORKFLOW'; payload: Workflow }
-  | { type: 'SET_ACTIVE_WORKFLOW_ID'; payload: string | null }
-  | { type: 'ADD_AGENT_TO_TEAM'; payload: ManifestAgent }
-  | { type: 'REMOVE_AGENT_FROM_TEAM'; payload: string }
-  | { type: 'ENROLL_STUDENT' }
-  | { type: 'SET_ACTIVE_STUDENT_ID'; payload: string | null }
-  | { type: 'ADD_WORKFLOW'; payload: Workflow }
-  | { type: 'UPDATE_STUDENT_SCHEDULE'; payload: { studentId: string; schedule: ScheduleItem[] } }
-  | { type: 'UPDATE_STUDENT_GOALS_AND_CURRICULUM'; payload: UpdateStudentGoalsPayload }
-  | { type: 'UPDATE_STUDENT_PROFILE'; payload: UpdateStudentProfilePayload }
-  | { type: 'LOG_ACTIVITY_COMPLETION'; payload: LogActivityPayload }
-  | { type: 'SHOWCASE_PROJECT'; payload: ShowcasedProject }
-  | { type: 'SHOW_TOAST'; payload: { message: string; type: Toast['type'] } }
-  | { type: 'HIDE_TOAST'; payload: number }
-  | { type: 'SET_MISSION_PLAN'; payload: MissionPlan | null }
-  | { type: 'UPDATE_MISSION_STEP_STATE'; payload: { step: number; status: MissionStep['status']; result?: string } }
-  | { type: 'SET_SYSTEM_ERROR', payload: SystemError | null }
-  | { type: 'CLEAR_SYSTEM_ERROR' }
-  | { type: 'LOG_SECURITY_EVENT'; payload: Omit<SecurityLogEntry, 'timestamp'> }
-  | { type: 'START_LECTURE' }
-  | { type: 'END_LECTURE' }
-  | { type: 'JOIN_LECTURE'; payload: string } // agentId
-  | { type: 'LEAVE_LECTURE'; payload: string } // agentId
-  | { type: 'ADD_CURRICULUM_ITEM'; payload: CurriculumItem }
-  | { type: 'REMOVE_CURRICULUM_ITEM'; payload: string };
 
 const initialState: AppState = {
   currentUser: null,
@@ -56,34 +18,24 @@ const initialState: AppState = {
         creativity: 'medium',
         verbosity: 'balanced',
       },
-      tools: [
-        { toolId: 'archival_memory_search', settings: { searchDepth: 3 } },
-        { toolId: 'fetch_webpage', settings: { userAgent: 'AgentricAI-Web-Bot/1.0', allowRedirects: true } }
-      ],
+      tools: [],
       coreMemory: [],
     },
-  ],
-  workflows: [
-    {
-        id: 'wf-default-storybook',
-        name: 'Default Storybook Workflow',
-        nodes: [],
-        connections: []
-    }
   ],
   students: [],
   showcasedProjects: [],
   toasts: [],
   systemError: null,
   activeAgentId: null,
-  activeWorkflowId: 'wf-default-storybook',
   activeStudentId: null,
-  missionTeam: [],
-  missionPlan: null,
   securityLog: [],
   liveLectureSession: { isActive: false, attendeeAgentIds: [] },
   curriculum: [],
   isEnrolling: false,
+  isOfflineMode: typeof navigator !== 'undefined' && !navigator.onLine,
+  workflows: [],
+  missionPlan: null,
+  missionTeam: [],
 };
 
 // Simple hash simulation for the frontend.
@@ -107,7 +59,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
             liveLectureSession: loadedState.liveLectureSession || { isActive: false, attendeeAgentIds: [] },
             curriculum: loadedState.curriculum || [],
             toasts: [], // Do not persist toasts
-            missionPlan: null, // Do not persist mission plans
             systemError: null, // Do not persist errors
             isEnrolling: false, // Don't persist enrollment state
         };
@@ -234,25 +185,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
       };
     case 'SET_ACTIVE_AGENT_ID':
         return { ...state, activeAgentId: action.payload };
-    case 'ADD_WORKFLOW':
-        // Prevent duplicate workflows
-        if (state.workflows.some(wf => wf.id === action.payload.id)) return state;
-        return { ...state, workflows: [...state.workflows, action.payload] };
-    case 'UPDATE_WORKFLOW':
-        return {
-            ...state,
-            workflows: state.workflows.map(wf => wf.id === action.payload.id ? action.payload : wf)
-        };
-    case 'SET_ACTIVE_WORKFLOW_ID':
-        return { ...state, activeWorkflowId: action.payload };
-    case 'ADD_AGENT_TO_TEAM':
-        if (state.missionTeam.some(agent => agent.id === action.payload.id)) return state;
-        return { ...state, missionTeam: [...state.missionTeam, action.payload] };
-    case 'REMOVE_AGENT_FROM_TEAM':
-        return {
-            ...state,
-            missionTeam: state.missionTeam.filter(agent => agent.id !== action.payload)
-        };
     case 'ENROLL_STUDENT': {
         // This action is now for an admin/parent enrolling a new student, not for initial signup.
         const studentId = `student-${Date.now()}`;
@@ -275,19 +207,16 @@ const appReducer = (state: AppState, action: Action): AppState => {
             id: studentId,
             companionAgentId: companionAgentId,
             schedule: [],
-            preferences: {
-                preferredTopics: ['dinosaurs', 'space travel'],
-                learningStyle: 'visual',
-            },
+            preferences: { preferredTopics: ['drawing', 'space'], learningStyle: 'visual' },
             parentGoals: [],
             teacherCurriculum: [],
             activityLog: [],
         };
-        
+
         return {
             ...state,
-            students: [...state.students, newStudent],
             agents: [...state.agents, newCompanionAgent],
+            students: [...state.students, newStudent],
         };
     }
     case 'SET_ACTIVE_STUDENT_ID':
@@ -295,153 +224,123 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'UPDATE_STUDENT_SCHEDULE':
         return {
             ...state,
-            students: state.students.map(s => 
-                s.id === action.payload.studentId ? { ...s, schedule: action.payload.schedule } : s
-            )
+            students: state.students.map(s => s.id === action.payload.studentId ? { ...s, schedule: action.payload.schedule } : s)
         };
     case 'UPDATE_STUDENT_GOALS_AND_CURRICULUM':
         return {
             ...state,
-            students: state.students.map(s => 
-                s.id === action.payload.studentId 
-                    ? { 
-                        ...s, 
-                        parentGoals: action.payload.parentGoals,
-                        teacherCurriculum: action.payload.teacherCurriculum,
-                      } 
+            students: state.students.map(s =>
+                s.id === action.payload.studentId
+                    ? { ...s, parentGoals: action.payload.parentGoals, teacherCurriculum: action.payload.teacherCurriculum }
                     : s
             )
         };
      case 'UPDATE_STUDENT_PROFILE':
         return {
             ...state,
-            students: state.students.map(s => 
-                s.id === action.payload.studentId 
-                    ? { ...s, preferences: action.payload.preferences }
-                    : s
-            )
+            students: state.students.map(s => s.id === action.payload.studentId ? { ...s, preferences: action.payload.preferences } : s)
         };
     case 'LOG_ACTIVITY_COMPLETION':
         return {
             ...state,
             students: state.students.map(s => {
-                if (s.id !== action.payload.studentId) return s;
-                return {
-                    ...s,
-                    schedule: s.schedule.map(item => 
-                        item.id === action.payload.scheduleItemId 
-                            ? { ...item, status: 'completed', review: action.payload.review } 
-                            : item
-                    ),
-                    activityLog: [
-                        ...s.activityLog,
-                        {
-                            timestamp: new Date().toISOString(),
-                            summary: action.payload.summary,
-                            scheduleItemId: action.payload.scheduleItemId,
-                        }
-                    ]
-                };
+                if (s.id === action.payload.studentId) {
+                    return {
+                        ...s,
+                        schedule: s.schedule.map(item => item.id === action.payload.scheduleItemId ? { ...item, status: 'completed', review: action.payload.review } : item),
+                        activityLog: [...s.activityLog, { timestamp: new Date().toISOString(), summary: action.payload.summary, scheduleItemId: action.payload.scheduleItemId }]
+                    };
+                }
+                return s;
             })
         };
     case 'SHOWCASE_PROJECT':
-      if (state.showcasedProjects.some(p => p.id === action.payload.id)) {
-        return state; // Avoid duplicates
-      }
-      return {
-        ...state,
-        showcasedProjects: [...state.showcasedProjects, action.payload],
-      };
-    case 'SHOW_TOAST':
-      return {
-        ...state,
-        toasts: [...state.toasts, { ...action.payload, id: Date.now() }],
-      };
-    case 'HIDE_TOAST':
-      return {
-        ...state,
-        toasts: state.toasts.filter(t => t.id !== action.payload),
-      };
-    case 'SET_MISSION_PLAN':
-      if (action.payload) {
-        // Initialize status for each step when a new plan is set
-        const planWithStatus = {
-          ...action.payload,
-          steps: action.payload.steps.map(step => ({...step, status: 'pending' as const}))
+        if (state.showcasedProjects.some(p => p.id === action.payload.id)) return state; // Prevent duplicates
+        return {
+            ...state,
+            showcasedProjects: [...state.showcasedProjects, action.payload]
         };
-        return { ...state, missionPlan: planWithStatus };
-      }
-      return { ...state, missionPlan: null };
+    case 'SHOW_TOAST':
+      return { ...state, toasts: [...state.toasts, { ...action.payload, id: Date.now() }] };
+    case 'HIDE_TOAST':
+      return { ...state, toasts: state.toasts.filter(t => t.id !== action.payload) };
+    case 'SET_SYSTEM_ERROR':
+        return { ...state, systemError: action.payload };
+    case 'CLEAR_SYSTEM_ERROR':
+        return { ...state, systemError: null };
+    case 'START_LECTURE':
+        return { ...state, liveLectureSession: { isActive: true, attendeeAgentIds: [] } };
+    case 'END_LECTURE':
+        return { ...state, liveLectureSession: { isActive: false, attendeeAgentIds: [] } };
+    case 'JOIN_LECTURE':
+        if (!state.liveLectureSession || state.liveLectureSession.attendeeAgentIds.includes(action.payload)) return state;
+        return {
+            ...state,
+            liveLectureSession: {
+                ...state.liveLectureSession,
+                attendeeAgentIds: [...state.liveLectureSession.attendeeAgentIds, action.payload]
+            }
+        };
+    case 'LEAVE_LECTURE':
+        if (!state.liveLectureSession) return state;
+        return {
+            ...state,
+            liveLectureSession: {
+                ...state.liveLectureSession,
+                attendeeAgentIds: state.liveLectureSession.attendeeAgentIds.filter(id => id !== action.payload)
+            }
+        };
+    case 'ADD_CURRICULUM_ITEM':
+        return { ...state, curriculum: [...(state.curriculum || []), action.payload] };
+    case 'REMOVE_CURRICULUM_ITEM':
+        return { ...state, curriculum: (state.curriculum || []).filter(item => item.id !== action.payload) };
+    case 'SET_OFFLINE_MODE':
+        return { ...state, isOfflineMode: true };
+    case 'SET_ONLINE_MODE':
+        return { ...state, isOfflineMode: false };
+    case 'ADD_AGENT_TO_TEAM':
+        if (state.missionTeam.some(agent => agent.id === action.payload.id)) return state;
+        return { ...state, missionTeam: [...state.missionTeam, action.payload] };
+    case 'REMOVE_AGENT_FROM_TEAM':
+        return { ...state, missionTeam: state.missionTeam.filter(agent => agent.id !== action.payload) };
+    case 'SET_MISSION_PLAN':
+        return { ...state, missionPlan: action.payload };
     case 'UPDATE_MISSION_STEP_STATE':
         if (!state.missionPlan) return state;
         return {
             ...state,
             missionPlan: {
                 ...state.missionPlan,
-                steps: state.missionPlan.steps.map(step => 
-                    step.step === action.payload.step 
-                        ? { ...step, status: action.payload.status, result: action.payload.result } 
-                        : step
-                )
-            }
+                steps: state.missionPlan.steps.map(step =>
+                    step.step === action.payload.step ? { ...step, status: action.payload.status, result: action.payload.result } : step
+                ),
+            },
         };
-    case 'SET_SYSTEM_ERROR':
-        const errorMessage = action.payload.error.message;
-        return { 
-            ...state, 
-            systemError: action.payload,
-            securityLog: [
-                { type: 'SYSTEM_ERROR_DETECTED', details: `Bug Agent caught error: ${errorMessage}`, timestamp: new Date().toISOString() },
-                 ...state.securityLog,
-            ]
-        };
-    case 'CLEAR_SYSTEM_ERROR':
-        return { ...state, systemError: null };
-    case 'START_LECTURE':
-        return { ...state, liveLectureSession: { ...(state.liveLectureSession as LiveLectureSession), isActive: true } };
-    case 'END_LECTURE':
-        return { ...state, liveLectureSession: { isActive: false, attendeeAgentIds: [] } };
-    case 'JOIN_LECTURE':
-        if (!state.liveLectureSession || state.liveLectureSession.attendeeAgentIds.includes(action.payload)) return state;
-        return { ...state, liveLectureSession: { ...state.liveLectureSession, attendeeAgentIds: [...state.liveLectureSession.attendeeAgentIds, action.payload] } };
-    case 'LEAVE_LECTURE':
-        if (!state.liveLectureSession) return state;
-        return { ...state, liveLectureSession: { ...state.liveLectureSession, attendeeAgentIds: state.liveLectureSession.attendeeAgentIds.filter(id => id !== action.payload) } };
-    case 'ADD_CURRICULUM_ITEM':
-      return {
-        ...state,
-        curriculum: [...(state.curriculum || []), action.payload],
-      };
-    case 'REMOVE_CURRICULUM_ITEM':
-      return {
-        ...state,
-        curriculum: (state.curriculum || []).filter(item => item.id !== action.payload),
-      };
     default:
       return state;
   }
 };
 
-export const AppContext = createContext<{
-  state: AppState;
-  dispatch: React.Dispatch<Action>;
-}>({
+const AppContext = createContext<{ state: AppState; dispatch: React.Dispatch<Action>; }>({
   state: initialState,
   dispatch: () => null,
 });
 
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
   useEffect(() => {
-    const savedState = loadStateFromLocalStorage();
-    if (savedState) {
-      dispatch({ type: 'SET_STATE', payload: savedState as AppState });
+    const loadedState = loadStateFromLocalStorage();
+    if (loadedState) {
+      dispatch({ type: 'SET_STATE', payload: { ...initialState, ...loadedState } as AppState });
     }
   }, []);
 
   useEffect(() => {
-    saveStateToLocalStorage(state);
+    if (state !== initialState) {
+        const { toasts, systemError, isEnrolling, ...persistableState } = state;
+        saveStateToLocalStorage(persistableState as AppState);
+    }
   }, [state]);
 
   return (
@@ -451,4 +350,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 };
 
-export const useAppContext = () => useContext(AppContext);
+const useAppContext = () => useContext(AppContext);
+
+export { AppProvider, useAppContext, AppContext };

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatMessage, UserRole, ProposedChanges } from '../types/index';
+import { ChatMessage, UserRole, ProposedChanges, Action } from '../types/index';
 import { generateCodeModification, startChatStream } from '../services/logicBroker';
 import { PaperAirplaneIcon, XMarkIcon, ArrowsPointingOutIcon, SparklesIcon } from './icons';
 import { architectureContext } from '../core/architectureContext';
@@ -19,8 +19,8 @@ const getPersonaForRole = (role: UserRole): { instruction: string; greeting: str
         case 'teacher':
             return {
                 title: 'Platform Guide',
-                instruction: "You are a friendly and helpful guide for the AgentricAI University platform. Your audience is parents and teachers who are not technical. Explain concepts simply, guide them on how to set goals for their student's agent, and help them understand the privacy-first model. Be patient and supportive.",
-                greeting: "Hello! I'm your guide to AgentricAI University. I can help you understand how to set goals for your student or navigate the platform. How can I assist you today?"
+                instruction: "You are a friendly and helpful guide for the AgentricAI University platform. Your audience is parents and teachers. You explain core concepts simply: how to set goals, how companion agents work, and our privacy-first model. Be patient and supportive.",
+                greeting: "Hello! I'm your Platform Guide. I can help explain how to set goals for a student, how the companion agents work, or answer questions about our privacy model. How can I assist you today?"
             };
         case 'admin':
             return {
@@ -31,15 +31,15 @@ const getPersonaForRole = (role: UserRole): { instruction: string; greeting: str
         case 'student':
         default:
              return {
-                title: 'Analytics Specialist',
-                instruction: 'You are a helpful and concise data analytics specialist for a company called AgentricAI. Provide insights on system performance, student analytics, and agent status. Keep your answers brief and to the point.',
-                greeting: 'Hello, I am your data analytics specialist. I can provide insights on system performance, student analytics, agent status, and much more. What would you like to analyze?',
+                title: 'Student Companion Guide',
+                instruction: 'You are a helpful and encouraging guide for students using AgentricAI. Your goal is to explain platform features in a simple, friendly way. You cannot help with homework or assignments, but you can explain how the platform works.',
+                greeting: "Hi there! I'm the Student Companion Guide. I can help you understand how your schedule works or tell you more about your Companion Agent. What are you curious about?",
             };
     }
 };
 
 export const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserRole }) => {
-    const { state } = useAppContext();
+    const { state, dispatch } = useAppContext();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
@@ -49,7 +49,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserRole }) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     
     const persona = getPersonaForRole(currentUserRole);
-    const brokerParams = { isPremium: state.currentUser?.subscriptionPlan === 'pro' };
+    const brokerParams = {
+        isPremium: state.currentUser?.subscriptionPlan === 'pro',
+        isOnline: !state.isOfflineMode,
+        dispatch: dispatch as React.Dispatch<Action>, // Cast for service layer
+    };
 
     useEffect(() => {
         if (isOpen) {
@@ -132,7 +136,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserRole }) => {
             const stream = await startChatStream(currentInput, persona.instruction, brokerParams);
             let responseText = '';
             for await (const chunk of stream) {
-                responseText += chunk;
+                // Special character '\f' signals a reset of the message text.
+                // This allows the RAG-style agent to show "Thinking..." then replace it.
+                if (chunk === '\f') {
+                    responseText = '';
+                } else {
+                    responseText += chunk;
+                }
+                
                 setMessages(prev => prev.map(msg => 
                     msg.id === botMessageId ? { ...msg, text: responseText } : msg
                 ));
@@ -218,6 +229,12 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserRole }) => {
                 </div>
 
                 <footer className="p-3 border-t border-brand-border">
+                    {brokerParams.isPremium && state.isOfflineMode && (
+                        <div className="text-xs text-center text-yellow-300 bg-yellow-900/50 p-2 mb-2 rounded-md">
+                            <p><strong>Connection Lost</strong></p>
+                            <p>Using basic RAG agent. Responses will be less detailed. We will reconnect you automatically.</p>
+                        </div>
+                    )}
                     <form onSubmit={handleSendMessage} className="flex items-center gap-2">
                         <input
                             type="text"

@@ -17,40 +17,31 @@ This platform was conceived, designed, and created by **Brandon Anthony Myers**,
 ## Platform Showcase
 
 **Login & Role Selection**
-![Login Screen](./docs/screenshots/01-login.png)<img width="2560" height="1600" alt="Screenshot 2025-09-17 012159" src="https://github.com/user-attachments/assets/e77c9ccc-8b97-4f99-8e25-52cd061f188a" />
-
+![Login Screen](./docs/screenshots/01-login.png)
 
 **Administrative Control Center**
-![Administrative Dashboard](./docs/screenshots/02-dashboard.png)<img width="2560" height="1600" alt="Screenshot 2025-09-17 012454" src="https://github.com/user-attachments/assets/f2a6e273-d78a-48e0-b77b-432f64f84021" />
-
+![Administrative Dashboard](./docs/screenshots/02-dashboard.png)
 
 **Agent Roster & Mission Command**
-![Mission Command View](./docs/screenshots/03-mission-command.png)<img width="2560" height="1600" alt="Screenshot 2025-09-17 012530" src="https://github.com/user-attachments/assets/53d7297e-1de3-469b-8583-0737215d58f2" />
-
+![Mission Command View](./docs/screenshots/03-mission-command.png)
 
 **Security Sentinel Console**
-![Security Sentinel Console](./docs/screenshots/04-security-console.png)<img width="2560" height="1600" alt="Screenshot 2025-09-17 012552" src="https://github.com/user-attachments/assets/2c153099-a472-4fa3-9ec4-9dbef4b5b66b" />
-
+![Security Sentinel Console](./docs/screenshots/04-security-console.png)
 
 **Agent Editor**
 ![Agent Editor](./docs/screenshots/05-agent-editor.png)
-<img width="2560" height="1600" alt="Screenshot 2025-09-17 012801" src="https://github.com/user-attachments/assets/12a79e11-3004-4236-aba1-94508cd6623f" />
 
 **Gateway Console**
-![Gateway Console](./docs/screenshots/06-gateway-console.png)<img width="2560" height="1600" alt="Screenshot 2025-09-17 012809" src="https://github.com/user-attachments/assets/0734cc31-c6c6-452e-ad6c-a15f6fd15295" />
-
+![Gateway Console](./docs/screenshots/06-gateway-console.png)
 
 **System Optimization & Performance**
-![System Optimization View](./docs/screenshots/07-system-optimization.png)<img width="2560" height="1600" alt="Screenshot 2025-09-17 012830" src="https://github.com/user-attachments/assets/00e82f8f-6ef1-4046-a301-1fa7cc91924e" />
-
+![System Optimization View](./docs/screenshots/07-system-optimization.png)
 
 **Recursive Code Assistant**
 ![AI Code Assistant](./docs/screenshots/08-code-assistant.png)
-<img width="548" height="945" alt="Screenshot 2025-09-16 165644" src="https://github.com/user-attachments/assets/f4837bb0-53da-4693-a241-5618f174f7f7" />
 
 **AgentricAI University Hub**
 ![University Hub](./docs/screenshots/09-university-hub.png)
-<img width="2560" height="1600" alt="Screenshot 2025-09-17 012909" src="https://github.com/user-attachments/assets/9bd2f051-01bf-4d9f-837b-025dfa225f0d" />
 
 ## Key Features
 

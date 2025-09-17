@@ -11,6 +11,29 @@ const ai = API_KEY ? new GoogleGenAI({apiKey: API_KEY}) : null;
 
 const chatSessions = new Map<string, { chat: Chat, systemInstruction: string }>();
 
+/**
+ * A robust JSON parsing function that extracts a JSON object or array from a string,
+ * even if it's wrapped in markdown or other text.
+ */
+const robustJSONParse = (jsonString: string) => {
+    // This regex finds the first JSON object or array in the string.
+    const match = jsonString.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+    if (match && match[0]) {
+        try {
+            return JSON.parse(match[0]);
+        } catch (e) {
+            // Fallback to trying the raw string if parsing the match fails
+        }
+    }
+    // Fallback for clean responses or if regex fails
+    try {
+       return JSON.parse(jsonString);
+    } catch(e) {
+        throw new Error(`AI response did not contain valid JSON. ${e instanceof Error ? e.message : ''}`);
+    }
+};
+
+
 function getChatSession(sessionId: string, systemInstruction: string, model: string): Chat {
     if (!ai) throw new Error("API Key not configured on server.");
     
@@ -145,19 +168,25 @@ export async function generateCodeModification(
         }
         If the request is unclear, dangerous, or you cannot fulfill it, respond with a JSON object where the "changes" array is empty and the "summary" explains why.
     `;
-
+    let responseText = '';
     try {
         const fullPrompt = `User Request: "${prompt}"\n\nFull Codebase Context:\n---\n${codebaseContext}\n---`;
         const { text } = await generateContent({ prompt: fullPrompt, systemInstruction });
-        const parsedResult = JSON.parse(text);
+        responseText = text;
 
-        if (!parsedResult.summary || !Array.isArray(parsedResult.changes)) {
-            throw new Error("AI response is not in the expected format.");
+        const parsedResult = robustJSONParse(responseText);
+
+        if (!parsedResult || !parsedResult.summary || !Array.isArray(parsedResult.changes)) {
+            throw new Error("AI response is missing 'summary' or 'changes' properties, or is not valid JSON.");
         }
         return parsedResult as ProposedChanges;
 
     } catch (error) {
         console.error("Gemini API error in generateCodeModification:", error);
-        throw new Error(`AI failed to generate a valid code modification. ${error instanceof Error ? error.message : ''}`);
+        let errorMessage = `AI failed to generate a valid code modification. ${error instanceof Error ? error.message : ''}`;
+        if (responseText) {
+            errorMessage += `\n\n--- Raw AI Response ---\n${responseText}`;
+        }
+        throw new Error(errorMessage);
     }
 }

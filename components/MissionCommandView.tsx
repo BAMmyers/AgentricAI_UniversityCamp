@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { manifestAgents } from '../core/agentManifest';
-import { ManifestAgent, MissionPlan, MissionStep, CommLogEntry, MissionStepStatus } from '../types/index';
+import { ManifestAgent, MissionPlan, CommLogEntry, MissionStepStatus, Action } from '../types/index';
 import { useAppContext } from '../context/AppContext';
 import { PlusIcon, MinusCircleIcon, PaperAirplaneIcon, SparklesIcon, PlayIcon, CpuIcon, CheckCircleIcon, XCircleIcon, CommandLineIcon } from './icons';
 import { generateContent } from '../services/logicBroker';
@@ -13,7 +13,11 @@ const MissionCommandView: React.FC = () => {
     const [isPlanning, setIsPlanning] = useState(false);
     const [isExecuting, setIsExecuting] = useState(false);
     const [commLog, setCommLog] = useState<CommLogEntry[]>([]);
-    const brokerParams = { isPremium: state.currentUser?.subscriptionPlan === 'pro' };
+    const brokerParams = {
+        isPremium: state.currentUser?.subscriptionPlan === 'pro',
+        isOnline: !state.isOfflineMode,
+        dispatch: dispatch as React.Dispatch<Action>
+    };
     
     useEffect(() => {
         // Clear logs and execution status when plan or team changes

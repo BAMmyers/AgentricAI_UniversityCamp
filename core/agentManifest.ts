@@ -514,6 +514,8 @@ function parseManifest(): ManifestAgent[] {
   for (const block of blocks) {
     const lines = block.trim().split('\n');
     const agentData: Partial<ManifestAgent> = {};
+    let roleLines: string[] = [];
+    let isRoleSection = false;
 
     lines.forEach(line => {
       if (line.startsWith('Agent:')) {
@@ -522,12 +524,21 @@ function parseManifest(): ManifestAgent[] {
           agentData.name = match[1].trim();
           agentData.id = match[2].trim();
         }
+        isRoleSection = false;
       } else if (line.startsWith('Category:')) {
         agentData.category = line.replace('Category:', '').trim();
+        isRoleSection = false;
       } else if (line.startsWith('Role:')) {
-        agentData.role = lines.slice(lines.indexOf(line)).join(' ').replace('Role:', '').trim();
+        roleLines.push(line.replace('Role:', '').trim());
+        isRoleSection = true;
+      } else if (isRoleSection) {
+        roleLines.push(line.trim());
       }
     });
+    
+    if (roleLines.length > 0) {
+        agentData.role = roleLines.join(' ');
+    }
     
     if (agentData.id && agentData.name && agentData.category && agentData.role) {
       agents.push(agentData as ManifestAgent);
