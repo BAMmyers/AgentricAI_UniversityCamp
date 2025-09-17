@@ -15,7 +15,7 @@ Role: Analyzes the user's objective to determine if it can be resolved by a sing
 ========================================
 Agent: AgentricAI_001 (agent-1)
 Category: Core & System
-Logic: gemini
+Logic: local
 Tool: None
 Role: As the operator's right hand, acts as a Core Coordinator. Analyzes the user's objective to create and delegate a mission plan for the team.
 ========================================
@@ -159,13 +159,13 @@ Role: Provides an interface to access and manage files in a user's Google Drive,
 ========================================
 Agent: The Alchemist (agent-13)
 Category: Development & Code
-Logic: gemini
+Logic: local
 Tool: None
 Role: Transforms user ideas or requirements into detailed application blueprints, software designs, or feature lists.
 ========================================
 Agent: Snippet Coder (agent-26)
 Category: Development & Code
-Logic: gemini
+Logic: local
 Tool: None
 Role: Generates small code snippets in a specified language based on a functional description.
 ========================================
@@ -231,7 +231,7 @@ Role: Takes input text and formats it as a code block in a specified language, w
 ========================================
 Agent: Content Summarizer (agent-23)
 Category: Content & Language
-Logic: gemini
+Logic: local
 Tool: None
 Role: Summarizes long texts or articles into concise overviews, extracting key points.
 ========================================
@@ -291,7 +291,7 @@ Role: Explains a complex topic in an 'Explain Like I'm 5' (ELI5) style – very 
 ========================================
 Agent: The Apprentice (agent-6)
 Category: Support & Ideation
-Logic: gemini
+Logic: local
 Tool: None
 Role: An AI trainee that assists the user by learning, researching, planning, and utilizing other AgentricAI tools.
 ========================================
@@ -303,13 +303,13 @@ Role: A personal AI assistant for organization. Manages notes, reminders, and re
 ========================================
 Agent: The Tutor (agent-11)
 Category: Support & Ideation
-Logic: gemini
+Logic: local
 Tool: None
 Role: An AI tutor that helps users learn about AgentricAI Studios, AI concepts, or other topics by providing explanations and guidance.
 ========================================
 Agent: The Counselor (agent-16)
 Category: Support & Ideation
-Logic: gemini
+Logic: local
 Tool: None
 Role: A conversational agent for empathetic dialogue, providing a space for users to articulate thoughts or seek general advice (not professional).
 ========================================
@@ -471,37 +471,37 @@ Role: Actively reports documented threats, malicious code, and attack origins to
 ========================================
 Agent: Environmental Impact Analyser (ext-env-01)
 Category: External Review & Impact Analysis
-Logic: gemini
+Logic: local
 Tool: None
 Role: Assesses the potential environmental footprint of a proposed project, including resource consumption, emissions, and ecological effects.
 ========================================
 Agent: Economical Impact Agent (ext-eco-01)
 Category: External Review & Impact Analysis
-Logic: gemini
+Logic: local
 Tool: None
 Role: Analyzes the potential financial and economic effects of a project, including cost-benefit analysis, market impact, and return on investment.
 ========================================
 Agent: Human Impact Agent (ext-hum-01)
 Category: External Review & Impact Analysis
-Logic: gemini
+Logic: local
 Tool: None
 Role: Evaluates the social, cultural, and individual human consequences of a project, including effects on user well-being, community, and accessibility.
 ========================================
 Agent: Ethical Compliance Officer (ext-eth-01)
 Category: External Review & Impact Analysis
-Logic: gemini
+Logic: local
 Tool: None
 Role: Audits mission plans and outcomes against established ethical principles, flagging potential issues related to bias, fairness, transparency, and accountability.
 ========================================
 Agent: Regulatory Affairs Specialist (ext-reg-01)
 Category: External Review & Impact Analysis
-Logic: gemini
+Logic: local
 Tool: None
 Role: Checks proposed actions and project outcomes for compliance with relevant local, national, and international laws, policies, and industry regulations.
 ========================================
 Agent: Long-Term Viability Analyst (ext-ltv-01)
 Category: External Review & Impact Analysis
-Logic: gemini
+Logic: local
 Tool: None
 Role: Assesses the long-term sustainability and future implications of a project, considering technological evolution, market shifts, and potential unforeseen consequences.
 ========================================
@@ -517,6 +517,8 @@ function parseManifest(): ManifestAgent[] {
 
     lines.forEach(line => {
       if (line.startsWith('Agent:')) {
+        // FIX: The regex was using double backslashes to escape parentheses, 
+        // which is incorrect for regex literals. It should be a single backslash.
         const match = line.match(/Agent: (.*) \((.*)\)/);
         if (match) {
           agentData.name = match[1].trim();

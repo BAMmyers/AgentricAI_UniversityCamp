@@ -89,14 +89,26 @@ export async function generateContent(
     }
 
     try {
+        // FIX: The config logic was updated to prevent sending responseMimeType when googleSearch is used,
+        // which is against the API guidelines and can cause errors. The logic for detecting a JSON
+        // request was also made more robust.
+        const config: any = {
+            ...(params.systemInstruction && { systemInstruction: params.systemInstruction }),
+        };
+
+        if (params.useGoogleSearch) {
+            config.tools = [{googleSearch: {}}];
+        } else if (
+            params.prompt.includes("JSON") || 
+            (params.systemInstruction && params.systemInstruction.includes("JSON"))
+        ) {
+            config.responseMimeType = "application/json";
+        }
+        
         const response = await ai.models.generateContent({
             model: params.model || 'gemini-2.5-flash',
             contents: params.prompt,
-            config: {
-                ...(params.systemInstruction && { systemInstruction: params.systemInstruction }),
-                ...(params.useGoogleSearch && { tools: [{googleSearch: {}}] }),
-                responseMimeType: params.prompt.includes("Respond with ONLY a JSON object") ? "application/json" : "text/plain",
-            }
+            config,
         });
         return {
             text: response.text,
