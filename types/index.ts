@@ -18,7 +18,8 @@ export type View =
   | 'teacher-lecture'
   | 'agent-detail'
   | 'curriculum-manager'
-  | 'student-ui-builder';
+  | 'student-ui-builder'
+  | 'agent-roster';
 
 export type UserRole = 'student' | 'parent' | 'teacher' | 'admin';
 export type SubscriptionPlan = 'free' | 'pro';

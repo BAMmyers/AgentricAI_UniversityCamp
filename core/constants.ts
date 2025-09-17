@@ -31,7 +31,9 @@ export const NODE_CONFIG: Record<NodeType, Omit<DynamicNodeConfig, 'name'>> = {
         outputs: [{ name: 'text', dataType: 'string', id: 'text-output' }],
         color: 'border-blue-500',
         icon: React.createElement(DocumentTextIcon, { className: "w-4 h-4"}),
-        category: 'Input'
+        category: 'Input',
+        // FIX: Added missing isDynamic property.
+        isDynamic: false,
     },
     storyGenerator: {
         description: "Generates a short story from a prompt.",
@@ -39,7 +41,9 @@ export const NODE_CONFIG: Record<NodeType, Omit<DynamicNodeConfig, 'name'>> = {
         outputs: [{ name: 'story', dataType: 'string', id: 'story-output' }],
         color: 'border-pink-500',
         icon: React.createElement(SparklesIcon, { className: "w-4 h-4"}),
-        category: 'Content & Language'
+        category: 'Content & Language',
+        // FIX: Added missing isDynamic property.
+        isDynamic: false,
     },
     jsonExtractor: {
         description: "Extracts a JSON object from text based on a schema.",
@@ -47,7 +51,9 @@ export const NODE_CONFIG: Record<NodeType, Omit<DynamicNodeConfig, 'name'>> = {
         outputs: [{ name: 'json', dataType: 'json', id: 'json-output' }],
         color: 'border-indigo-500',
         icon: React.createElement(CodeBracketIcon, { className: "w-4 h-4"}),
-        category: 'Data & Integration'
+        category: 'Data & Integration',
+        // FIX: Added missing isDynamic property.
+        isDynamic: false,
     },
     imageGenerator: {
         description: "Generates an image from a text prompt.",
@@ -55,7 +61,9 @@ export const NODE_CONFIG: Record<NodeType, Omit<DynamicNodeConfig, 'name'>> = {
         outputs: [{ name: 'image', dataType: 'image', id: 'image-output' }],
         color: 'border-teal-500',
         icon: React.createElement(PhotoIcon, { className: "w-4 h-4"}),
-        category: 'Content & Language'
+        category: 'Content & Language',
+        // FIX: Added missing isDynamic property.
+        isDynamic: false,
     },
     agentDesigner: {
         description: "Designs a new agent with a name and system instruction.",
@@ -63,7 +71,9 @@ export const NODE_CONFIG: Record<NodeType, Omit<DynamicNodeConfig, 'name'>> = {
         outputs: [{ name: 'agentDefinition', dataType: 'json', id: 'agentDefinition-output' }],
         color: 'border-purple-500',
         icon: React.createElement(UserPlusIcon, { className: "w-4 h-4"}),
-        category: 'Development & Code'
+        category: 'Development & Code',
+        // FIX: Added missing isDynamic property.
+        isDynamic: false,
     },
     pythonInterpreter: {
         description: "Executes Python code and returns the result.",
@@ -71,7 +81,9 @@ export const NODE_CONFIG: Record<NodeType, Omit<DynamicNodeConfig, 'name'>> = {
         outputs: [{ name: 'result', dataType: 'string', id: 'result-output' }],
         color: 'border-emerald-500',
         icon: React.createElement(CommandLineIcon, { className: "w-4 h-4"}),
-        category: 'Development & Code'
+        category: 'Development & Code',
+        // FIX: Added missing isDynamic property.
+        isDynamic: false,
     },
     quizGenerator: {
         description: "Generates a multiple-choice quiz on a given topic.",
@@ -79,7 +91,9 @@ export const NODE_CONFIG: Record<NodeType, Omit<DynamicNodeConfig, 'name'>> = {
         outputs: [{ name: 'quizJson', dataType: 'json', id: 'quizJson-output' }],
         color: 'border-amber-500',
         icon: React.createElement(QuestionMarkCircleIcon, { className: "w-4 h-4"}),
-        category: 'Education'
+        category: 'Education',
+        // FIX: Added missing isDynamic property.
+        isDynamic: false,
     },
     lessonPlanner: {
         description: "Designs a lesson plan for an educational objective.",
@@ -87,7 +101,9 @@ export const NODE_CONFIG: Record<NodeType, Omit<DynamicNodeConfig, 'name'>> = {
         outputs: [{ name: 'plan', dataType: 'string', id: 'plan-output' }],
         color: 'border-sky-500',
         icon: React.createElement(ClipboardDocumentListIcon, { className: "w-4 h-4"}),
-        category: 'Education'
+        category: 'Education',
+        // FIX: Added missing isDynamic property.
+        isDynamic: false,
     },
     textSummarizer: {
         description: "Summarizes a long piece of text.",
@@ -95,7 +111,9 @@ export const NODE_CONFIG: Record<NodeType, Omit<DynamicNodeConfig, 'name'>> = {
         outputs: [{ name: 'summary', dataType: 'string', id: 'summary-output' }],
         color: 'border-orange-500',
         icon: React.createElement(DocumentMinusIcon, { className: "w-4 h-4"}),
-        category: 'Content & Language'
+        category: 'Content & Language',
+        // FIX: Added missing isDynamic property.
+        isDynamic: false,
     },
      webSearch: {
         description: "Performs a web search and returns results and sources.",
@@ -105,6 +123,8 @@ export const NODE_CONFIG: Record<NodeType, Omit<DynamicNodeConfig, 'name'>> = {
         icon: React.createElement(GlobeAltIcon, { className: "w-4 h-4"}),
         category: 'Data & Integration',
         requiresWebSearch: true,
+        // FIX: Added missing isDynamic property.
+        isDynamic: false,
     },
     dataDisplay: {
         description: "Displays any data input in a formatted view.",
@@ -112,7 +132,9 @@ export const NODE_CONFIG: Record<NodeType, Omit<DynamicNodeConfig, 'name'>> = {
         outputs: [],
         color: 'border-gray-500',
         icon: React.createElement(EyeIcon, { className: "w-4 h-4"}),
-        category: 'Display'
+        category: 'Display',
+        // FIX: Added missing isDynamic property.
+        isDynamic: false,
     },
     imageDisplay: {
         description: "Displays an input image.",
@@ -120,6 +142,8 @@ export const NODE_CONFIG: Record<NodeType, Omit<DynamicNodeConfig, 'name'>> = {
         outputs: [],
         color: 'border-green-500',
         icon: React.createElement(PhotoIcon, { className: "w-4 h-4"}),
-        category: 'Display'
+        category: 'Display',
+        // FIX: Added missing isDynamic property.
+        isDynamic: false,
     }
 };

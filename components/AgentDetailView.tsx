@@ -33,11 +33,14 @@ const AgentDetailView: React.FC<AgentDetailViewProps> = ({ setActiveView }) => {
     if (!agentData) {
         return (
             <div className="p-6 text-center">
-                <p>Agent not found.</p>
-                <button onClick={() => setActiveView('student-roster')} className="mt-4 text-brand-secondary">Return to Roster</button>
+                <p>Agent not found or no agent selected.</p>
+                <button onClick={() => setActiveView('agent-roster')} className="mt-4 text-brand-secondary">Return to Roster</button>
             </div>
         );
     }
+    
+    // Defaulting to 'agent-roster' for the back button for simplicity, as this view is used in multiple portals.
+    const backView: View = state.currentUser?.role === 'admin' ? 'agent-roster' : 'student-roster';
 
     const agentTools = dynamicAgent?.tools || [];
 
@@ -48,7 +51,7 @@ const AgentDetailView: React.FC<AgentDetailViewProps> = ({ setActiveView }) => {
                     <h1 className="text-2xl font-bold text-white">{agentData.name}</h1>
                     <p className="text-brand-text-secondary font-mono">{agentData.id}</p>
                 </div>
-                <button onClick={() => setActiveView('student-roster')} className="flex items-center gap-2 bg-brand-gray px-4 py-2 rounded-lg hover:bg-brand-light-gray">
+                <button onClick={() => setActiveView(backView)} className="flex items-center gap-2 bg-brand-gray px-4 py-2 rounded-lg hover:bg-brand-light-gray">
                     <ArrowUturnLeftIcon className="w-5 h-5" />
                     <span className="text-sm">Back to Roster</span>
                 </button>

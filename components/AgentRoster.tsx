@@ -6,16 +6,19 @@ import { View } from '../types/index';
 
 interface AgentRosterProps {
   setActiveView: (view: View) => void;
+  navigateToConsole?: (studentId: string) => void;
 }
 
-const AgentRoster: React.FC<AgentRosterProps> = ({ setActiveView }) => {
+const AgentRoster: React.FC<AgentRosterProps> = ({ setActiveView, navigateToConsole }) => {
     const { state, dispatch } = useAppContext();
     const [filterCategory, setFilterCategory] = useState('All');
     const [sortBy, setSortBy] = useState('name');
+    const { students, agents: dynamicAgentsState } = state;
+
 
     const allAgents = useMemo(() => {
         const manifestAgentIds = new Set(manifestAgents.map(a => a.id));
-        const dynamicAgents = state.agents
+        const dynamicAgents = dynamicAgentsState
             .filter(a => !manifestAgentIds.has(a.id))
             .map(a => ({
                 id: a.id,
@@ -24,33 +27,53 @@ const AgentRoster: React.FC<AgentRosterProps> = ({ setActiveView }) => {
                 role: a.systemInstruction,
             }));
         return [...manifestAgents, ...dynamicAgents];
-    }, [state.agents]);
+    }, [dynamicAgentsState]);
+    
+    const studentAgents = useMemo(() => students.map(student => {
+        const agent = dynamicAgentsState.find(a => a.id === student.companionAgentId && a.type === 'Companion');
+        return {
+            studentId: student.id,
+            agentName: agent?.name || 'Companion Agent',
+            agentId: agent?.id || 'N/A'
+        };
+    }).filter(sa => sa.agentId !== 'N/A'), [students, dynamicAgentsState]);
 
-    const categories = useMemo(() => ['All', ...Array.from(new Set(allAgents.map(a => a.category)))], [allAgents]);
+
+    const categories = useMemo(() => ['All', 'Student Companions', ...Array.from(new Set(allAgents.map(a => a.category)))], [allAgents]);
 
     const filteredAndSortedAgents = useMemo(() => {
-        let agents = allAgents;
-
-        if (filterCategory !== 'All') {
-            agents = agents.filter(a => a.category === filterCategory);
+        let agentsToDisplay = [];
+        if (filterCategory === 'Student Companions') {
+            agentsToDisplay = studentAgents.map(sa => ({
+                id: sa.agentId,
+                name: sa.agentName,
+                category: 'Student Companions',
+                role: `Companion for student ${sa.studentId.slice(-6)}`,
+                studentId: sa.studentId, // For navigation
+            }));
+        } else {
+             agentsToDisplay = allAgents.map(a => ({...a, studentId: undefined}));
+             if (filterCategory !== 'All') {
+                agentsToDisplay = agentsToDisplay.filter(a => a.category === filterCategory);
+            }
         }
 
-        agents.sort((a, b) => {
-            if (sortBy === 'name') {
-                return a.name.localeCompare(b.name);
-            }
-            if (sortBy === 'category') {
-                return a.category.localeCompare(b.category) || a.name.localeCompare(b.name);
-            }
+        agentsToDisplay.sort((a, b) => {
+            if (sortBy === 'name') return a.name.localeCompare(b.name);
+            if (sortBy === 'category') return a.category.localeCompare(b.category) || a.name.localeCompare(b.name);
             return 0;
         });
 
-        return agents;
-    }, [allAgents, filterCategory, sortBy]);
+        return agentsToDisplay;
+    }, [allAgents, studentAgents, filterCategory, sortBy]);
     
-    const handleSelectAgent = (agentId: string) => {
-        dispatch({ type: 'SET_ACTIVE_AGENT_ID', payload: agentId });
-        setActiveView('agent-detail');
+    const handleSelectAgent = (agent: {id: string, studentId?: string}) => {
+        if (navigateToConsole && agent.studentId) {
+            navigateToConsole(agent.studentId);
+        } else {
+            dispatch({ type: 'SET_ACTIVE_AGENT_ID', payload: agent.id });
+            setActiveView('agent-detail');
+        }
     };
 
     return (
@@ -83,7 +106,7 @@ const AgentRoster: React.FC<AgentRosterProps> = ({ setActiveView }) => {
                     {filteredAndSortedAgents.map(agent => (
                         <div 
                             key={agent.id} 
-                            onClick={() => handleSelectAgent(agent.id)}
+                            onClick={() => handleSelectAgent(agent)}
                             className="bg-brand-gray border border-brand-border rounded-lg p-4 cursor-pointer group hover:border-brand-primary transition-colors"
                         >
                             <div className="flex justify-between items-start">
@@ -100,10 +123,10 @@ const AgentRoster: React.FC<AgentRosterProps> = ({ setActiveView }) => {
                                <p className="text-brand-text-secondary text-xs h-16 overflow-hidden text-ellipsis">{agent.role}</p>
                                <div className="flex justify-between items-center">
                                    <span className="text-xs bg-brand-dark px-2 py-1 rounded-full">{agent.category}</span>
-                                   <button className="flex items-center gap-1 text-xs text-brand-secondary opacity-0 group-hover:opacity-100 transition-opacity">
+                                   <div className="flex items-center gap-1 text-xs text-brand-secondary opacity-0 group-hover:opacity-100 transition-opacity">
                                        <DocumentMagnifyingGlassIcon className="w-4 h-4" />
-                                       View Details
-                                   </button>
+                                       <span>{agent.studentId ? "Manage" : "View Details"}</span>
+                                   </div>
                                </div>
                             </div>
                         </div>

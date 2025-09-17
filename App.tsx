@@ -3,7 +3,7 @@ import { useAppContext } from './context/AppContext';
 import LoginView from './components/LoginView';
 import StudentPortal from './components/StudentPortal';
 import ParentTeacherPortal from './components/ParentTeacherPortal';
-import AgenticStudio from './components/AgenticStudio';
+import AdminPortal from './components/AdminPortal';
 import ToastContainer from './components/Toast';
 import { ChatWidget } from './components/ChatWidget';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -58,8 +58,7 @@ const App: React.FC = () => {
       case 'teacher':
         return <ParentTeacherPortal />;
       case 'admin':
-        // The new, fully operational studio is now the direct admin portal.
-        return <AgenticStudio />;
+        return <AdminPortal />;
       default:
         return <LoginView />;
     }

@@ -4,7 +4,15 @@ import { saveStateToLocalStorage, loadStateFromLocalStorage } from '../utils/sto
 
 const initialState: AppState = {
   currentUser: null,
-  users: [],
+  users: [
+    {
+      id: 'user-admin-creator-bam',
+      email: 'agentricaiuiux@gmail.com',
+      role: 'admin',
+      subscriptionPlan: 'pro',
+      passwordHash: 'hashed_adminpass', // Default password is 'adminpass'
+    }
+  ],
   agents: [
     {
       id: 'agent-d88b0aef-d4d0-4987-a2e4-62b1a136b761',

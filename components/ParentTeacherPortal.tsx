@@ -5,7 +5,10 @@ import ShowcaseView from './ShowcaseView';
 import AccountView from './AccountView';
 import TeacherLectureView from './TeacherLectureView';
 import CurriculumManagerView from './CurriculumManagerView';
-import { UserGroupIcon, TrophyIcon, ArrowRightOnRectangleIcon, CreditCardIcon, StarIcon, BookOpenIcon } from './icons';
+import AgenticStudio from './AgenticStudio';
+import MissionCommandView from './MissionCommandView';
+import AgentDetailView from './AgentDetailView';
+import { UserGroupIcon, TrophyIcon, ArrowRightOnRectangleIcon, CreditCardIcon, StarIcon, BookOpenIcon, BrainCircuitIcon, CommandLineIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 import { View } from '../types/index';
 
@@ -16,6 +19,8 @@ const ParentTeacherPortal: React.FC = () => {
 
     const navItems = [
         { id: 'student-roster', label: 'Student Roster', icon: <UserGroupIcon className="w-5 h-5" /> },
+        { id: 'studio', label: 'Agentic Studio', icon: <BrainCircuitIcon className="w-5 h-5" /> },
+        { id: 'mission-command', label: 'Mission Command', icon: <CommandLineIcon className="w-5 h-5" /> },
         { id: 'curriculum-manager', label: 'Curriculum Manager', icon: <BookOpenIcon className="w-5 h-5" /> },
         { id: 'teacher-lecture', label: 'Live Lecture Hall', icon: <StarIcon className="w-5 h-5" /> },
         { id: 'showcase', label: 'Project Showcase', icon: <TrophyIcon className="w-5 h-5" /> },
@@ -26,6 +31,11 @@ const ParentTeacherPortal: React.FC = () => {
         setActiveStudentId(studentId);
         setActiveView('parent-teacher-console');
     }
+    
+    // This function will be passed to the Agent Roster to handle navigation
+    const navigateToAgentDetail = () => {
+        setActiveView('agent-detail');
+    };
 
     const handleLogout = () => {
         dispatch({ type: 'LOGOUT' });
@@ -37,6 +47,12 @@ const ParentTeacherPortal: React.FC = () => {
                 return <StudentRoster navigateToConsole={navigateToConsole} />;
             case 'parent-teacher-console':
                 return activeStudentId ? <ParentTeacherConsole studentId={activeStudentId} setActiveView={setActiveView} /> : <StudentRoster navigateToConsole={navigateToConsole} />;
+            case 'studio':
+                return <AgenticStudio />;
+            case 'mission-command':
+                return <MissionCommandView />;
+            case 'agent-detail':
+                 return <AgentDetailView setActiveView={setActiveView} />;
             case 'curriculum-manager':
                 return <CurriculumManagerView />;
             case 'teacher-lecture':
