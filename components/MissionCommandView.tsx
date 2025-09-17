@@ -3,7 +3,7 @@ import { manifestAgents } from '../core/agentManifest';
 import { ManifestAgent, MissionPlan, MissionStep, CommLogEntry, MissionStepStatus } from '../types/index';
 import { useAppContext } from '../context/AppContext';
 import { PlusIcon, MinusCircleIcon, PaperAirplaneIcon, SparklesIcon, PlayIcon, CpuIcon, CheckCircleIcon, XCircleIcon, CommandLineIcon } from './icons';
-import { generateContent } from '../services/geminiService';
+import { generateContent } from '../services/logicBroker';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -13,6 +13,7 @@ const MissionCommandView: React.FC = () => {
     const [isPlanning, setIsPlanning] = useState(false);
     const [isExecuting, setIsExecuting] = useState(false);
     const [commLog, setCommLog] = useState<CommLogEntry[]>([]);
+    const brokerParams = { isPremium: state.currentUser?.subscriptionPlan === 'pro' };
     
     useEffect(() => {
         // Clear logs and execution status when plan or team changes
@@ -64,7 +65,7 @@ const MissionCommandView: React.FC = () => {
         `;
 
         try {
-            const { text } = await generateContent({ prompt });
+            const { text } = await generateContent({ prompt }, brokerParams);
             const plan: MissionPlan = JSON.parse(text);
             dispatch({ type: 'SET_MISSION_PLAN', payload: plan });
         } catch (e) {
@@ -111,7 +112,7 @@ const MissionCommandView: React.FC = () => {
             `;
             
             try {
-                const { text: result } = await generateContent({ prompt });
+                const { text: result } = await generateContent({ prompt }, brokerParams);
                 previousStepResult = result;
                 dispatch({ type: 'UPDATE_MISSION_STEP_STATE', payload: { step: step.step, status: 'completed', result }});
                 addCommLog(agent.name, `Task complete. Result: ${result.substring(0, 100)}...`, "Orchestrator Alpha");

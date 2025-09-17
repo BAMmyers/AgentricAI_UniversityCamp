@@ -1,4 +1,4 @@
-# AgentricAI Admin Studio & University Platform
+# AgentricAI University
 
 This repository contains the source code for the AgentricAI Admin Studio, a sophisticated administrative interface for building and managing AI agent workflows, and the associated Student & Parent/Teacher Portals for an AI-powered education system.
 
@@ -10,9 +10,38 @@ A cornerstone of the platform is the **Echo Project Privacy Model**: Student int
 
 ## Creator & Original Designer
 
-This platform was designed and created by **Brandon A Myers**.
+This platform was conceived, designed, and created by **Brandon Anthony Myers**, founder of AgentricAI.
 
 -   **Contact:** [agentricaiuiux@gmail.com](mailto:agentricaiuiux@gmail.com)
+
+## Platform Showcase
+
+**Login & Role Selection**
+![Login Screen](./docs/screenshots/01-login.png)
+
+**Administrative Control Center**
+![Administrative Dashboard](./docs/screenshots/02-dashboard.png)
+
+**Agent Roster & Mission Command**
+![Mission Command View](./docs/screenshots/03-mission-command.png)
+
+**Security Sentinel Console**
+![Security Sentinel Console](./docs/screenshots/04-security-console.png)
+
+**Agent Editor**
+![Agent Editor](./docs/screenshots/05-agent-editor.png)
+
+**Gateway Console**
+![Gateway Console](./docs/screenshots/06-gateway-console.png)
+
+**System Optimization & Performance**
+![System Optimization View](./docs/screenshots/07-system-optimization.png)
+
+**Recursive Code Assistant**
+![AI Code Assistant](./docs/screenshots/08-code-assistant.png)
+
+**AgentricAI University Hub**
+![University Hub](./docs/screenshots/09-university-hub.png)
 
 ## Key Features
 
@@ -24,17 +53,6 @@ This platform was designed and created by **Brandon A Myers**.
 -   **Security Sentinel Console**: A real-time dashboard monitoring all security-related events, from login attempts to system integrity scans.
 -   **Recursive Code Assistant**: An integrated AI chat assistant for the administrator that can analyze the application's source code and propose modifications in real-time.
 -   **Resilient Error Handling**: A "Bug" agent and global `ErrorBoundary` ensure the application gracefully handles errors without crashing, maintaining a seamless user experience.
-
-<img width="2560" height="1600" alt="Screenshot 2025-09-16 165831" src="https://github.com/user-attachments/assets/3740b54c-1e11-46a3-908a-d99bab2b0c91" />
-<img width="548" height="945" alt="Screenshot 2025-09-16 165644" src="https://github.com/user-attachments/assets/41673081-e704-42f5-b5db-d0e44c4ae955" />
-<img width="2560" height="1600" alt="Screenshot 2025-09-16 165629" src="https://github.com/user-attachments/assets/f4258ff7-aab0-488f-8723-6a4c5c703439" />
-<img width="2560" height="1600" alt="Screenshot 2025-09-16 165611" src="https://github.com/user-attachments/assets/3f1342be-19fa-4b69-ad17-09a1b4207e6e" />
-<img width="2560" height="1600" alt="Screenshot 2025-09-16 165539" src="https://github.com/user-attachments/assets/25730fa8-d2d6-4134-a3a8-aa3bca11cead" />
-<img width="2560" height="1600" alt="Screenshot 2025-09-16 165401" src="https://github.com/user-attachments/assets/5dc2bebc-f7f6-4602-9593-51ac17c57dda" />
-<img width="2560" height="1600" alt="Screenshot 2025-09-16 165348" src="https://github.com/user-attachments/assets/0f59a2eb-fae2-43b5-a58d-5d910f259436" />
-<img width="2560" height="1600" alt="Screenshot 2025-09-16 165331" src="https://github.com/user-attachments/assets/d6836a23-d3f0-4d9b-9d57-38f4aa49f129" />
-<img width="2560" height="1600" alt="Screenshot 2025-09-16 165232" src="https://github.com/user-attachments/assets/773bbff4-16f3-4d29-9d0d-83fc60dadf35" />
-
 
 ## Technology Stack
 
@@ -48,7 +66,7 @@ This platform was designed and created by **Brandon A Myers**.
 ## Getting Started
 
 1.  **Prerequisites**: A modern web browser with JavaScript enabled.
-2.  **API Key**: The application requires a Google Gemini API key to be available as an environment variable (`process.env.API_KEY`).
+2.  **API Key (Optional for Pro Features)**: To use premium features, a Google Gemini API key must be available as an environment variable (`process.env.API_KEY`). The core application is functional without it.
 3.  **Running the Application**: Serve the `index.html` file through a local web server. All modules are ES6 and are imported directly in the browser.
 
 This project serves as a powerful demonstration of a deeply integrated, agent-driven application architecture designed for a new generation of intelligent, adaptive, and secure software.

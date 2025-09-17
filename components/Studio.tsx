@@ -3,7 +3,7 @@ import { PlusIcon, PlayIcon, TrashIcon, CodeBracketIcon, BookOpenIcon, BeakerIco
 import { View } from '../types/index';
 import { useAppContext } from '../context/AppContext';
 import { NodeData, Connection, Point, NodeType, Workflow, Agent } from '../types/index';
-import { generateContent } from '../services/geminiService';
+import { generateContent } from '../services/logicBroker';
 
 // --- CONSTANTS ---
 const NODE_WIDTH = 250;
@@ -152,6 +152,7 @@ interface StudioProps {
 const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
     const { state, dispatch } = useAppContext();
     const activeWorkflow = state.workflows.find(wf => wf.id === state.activeWorkflowId) as Workflow;
+    const brokerParams = { isPremium: state.currentUser?.subscriptionPlan === 'pro' };
 
     const [draggingNode, setDraggingNode] = useState<{ id: string; offset: Point } | null>(null);
     const [drawingConnection, setDrawingConnection] = useState<{ fromNodeId: string; fromOutput: string; fromPosition: Point } | null>(null);
@@ -240,17 +241,17 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
                         break;
                     case 'storyGenerator':
                         const storyPrompt = inputs.prompt || 'Tell me a short story.';
-                        const { text: story } = await generateContent({ prompt: storyPrompt, systemInstruction: node.content?.systemInstruction });
+                        const { text: story } = await generateContent({ prompt: storyPrompt, systemInstruction: node.content?.systemInstruction }, brokerParams);
                         outputData = { story };
                         break;
                     case 'jsonExtractor':
                         const jsonPrompt = `Extract information from the following text based on this schema ${node.content?.schema}. Text: ${inputs.text}`;
-                        const { text: jsonString } = await generateContent({ prompt: jsonPrompt, systemInstruction: "You are a JSON extraction expert. Only respond with the JSON object." });
+                        const { text: jsonString } = await generateContent({ prompt: jsonPrompt, systemInstruction: "You are a JSON extraction expert. Only respond with the JSON object." }, brokerParams);
                         outputData = { json: JSON.parse(jsonString) };
                         break;
                     case 'agentDesigner':
                         const designPrompt = `Design an agent for the following task: "${inputs.task}"`;
-                        const { text: agentJson } = await generateContent({ prompt: designPrompt, systemInstruction: node.content?.systemInstruction });
+                        const { text: agentJson } = await generateContent({ prompt: designPrompt, systemInstruction: node.content?.systemInstruction }, brokerParams);
                         outputData = { agentDefinition: JSON.parse(agentJson) };
                         break;
                     case 'imageGenerator':
@@ -259,21 +260,21 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
                         break;
                     case 'quizGenerator':
                         const quizPrompt = `Create a 3-question multiple-choice quiz about "${inputs.topic}". Respond with ONLY the JSON array, nothing else. The JSON schema for each question should be: {"question": "string", "options": ["string", "string", "string"], "answer": "string"}`;
-                        const { text: quizJsonString } = await generateContent({ prompt: quizPrompt, systemInstruction: node.content?.systemInstruction });
+                        const { text: quizJsonString } = await generateContent({ prompt: quizPrompt, systemInstruction: node.content?.systemInstruction }, brokerParams);
                         outputData = { quizJson: JSON.parse(quizJsonString) };
                         break;
                     case 'lessonPlanner':
                         const lessonPrompt = `Create a simple, one-paragraph lesson plan for the learning objective: "${inputs.objective}".`;
-                        const { text: plan } = await generateContent({ prompt: lessonPrompt, systemInstruction: node.content?.systemInstruction });
+                        const { text: plan } = await generateContent({ prompt: lessonPrompt, systemInstruction: node.content?.systemInstruction }, brokerParams);
                         outputData = { plan };
                         break;
                     case 'textSummarizer':
                         const summaryPrompt = `Summarize the following text in three sentences or less: "${inputs.text}"`;
-                        const { text: summary } = await generateContent({ prompt: summaryPrompt, systemInstruction: node.content?.systemInstruction });
+                        const { text: summary } = await generateContent({ prompt: summaryPrompt, systemInstruction: node.content?.systemInstruction }, brokerParams);
                         outputData = { summary };
                         break;
                     case 'webSearch':
-                        const { text: results, groundingChunks: sources } = await generateContent({ prompt: inputs.query, useGoogleSearch: true });
+                        const { text: results, groundingChunks: sources } = await generateContent({ prompt: inputs.query, useGoogleSearch: true }, brokerParams);
                         outputData = { results, sources };
                         break;
                     case 'dataDisplay':
@@ -412,7 +413,7 @@ const Studio: React.FC<StudioProps> = ({ setActiveView }) => {
                     onMouseUp={handleMouseUp}
                     onMouseLeave={handleMouseUp}
                 >
-                    <div className="absolute inset-0 bg-[linear-gradient(to_right,theme(colors.brand.border)_1px,transparent_1px),linear-gradient(to_bottom,theme(colors.brand.border)_1px,transparent_1px)] bg-[size:2rem_2rem] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_60%,transparent_100%)]"></div>
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,theme(colors.brand-border)_1px,transparent_1px),linear-gradient(to_bottom,theme(colors.brand-border)_1px,transparent_1px)] bg-[size:2rem_2rem] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_60%,transparent_100%)]"></div>
                     
                     <svg className="absolute inset-0 w-full h-full pointer-events-none">
                         {activeWorkflow.connections.map((conn, index) => {

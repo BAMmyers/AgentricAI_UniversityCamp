@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowUturnLeftIcon, XMarkIcon, SparklesIcon, TrophyIcon, ArrowPathIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 import { Workflow, NodeData, ScheduleItem, ShowcasedProject } from '../types/index';
-import { generateContent } from '../services/geminiService';
+import { generateContent } from '../services/logicBroker';
 import { useCompanionAgentLogic } from '../hooks/useCompanionAgentLogic';
 
 // --- MODAL FOR ACTIVITY ---
@@ -59,6 +59,7 @@ const StudentDashboard: React.FC = () => {
     const { state, dispatch } = useAppContext();
     const activeStudent = state.students.find(s => s.id === state.activeStudentId) || null;
     const companionAgent = activeStudent ? state.agents.find(a => a.id === activeStudent.companionAgentId) || null : null;
+    const brokerParams = { isPremium: state.currentUser?.subscriptionPlan === 'pro' };
     
     // The agent's "brain" is now encapsulated in this custom hook.
     useCompanionAgentLogic();
@@ -90,9 +91,14 @@ const StudentDashboard: React.FC = () => {
                 output = { text: node.content?.text };
             }
             if (node.type === 'storyGenerator') {
-                const { text } = await generateContent({ prompt: inputs.prompt, systemInstruction: node.content?.systemInstruction });
+                const { text } = await generateContent({ prompt: inputs.prompt, systemInstruction: node.content?.systemInstruction }, brokerParams);
                 output = { story: text };
             }
+            // Add other premium node types here if necessary
+            if (node.type === 'dataDisplay') {
+                output = inputs.data;
+            }
+
             nodeOutputs[node.id] = output;
             processedNodeIds.add(node.id);
             
@@ -114,7 +120,12 @@ const StudentDashboard: React.FC = () => {
         
         const outputNodes = workflow.nodes.filter(n => n.outputs.length > 0 && workflow.connections.every(c => c.fromNodeId !== n.id));
         const lastNode = outputNodes[0] || workflow.nodes[workflow.nodes.length-1];
-        return lastNode && nodeOutputs[lastNode.id] ? Object.values(nodeOutputs[lastNode.id])[0] : "Workflow completed with no final output.";
+        const finalOutput = lastNode && nodeOutputs[lastNode.id];
+        // Handle cases where output is an object with a single key
+        if (finalOutput && typeof finalOutput === 'object' && Object.keys(finalOutput).length === 1) {
+            return Object.values(finalOutput)[0];
+        }
+        return finalOutput !== undefined ? finalOutput : "Workflow completed with no final output.";
     };
 
     const handleActivityClick = async (item: ScheduleItem) => {
@@ -136,7 +147,7 @@ const StudentDashboard: React.FC = () => {
             setModalContent(result);
 
             const feedbackPrompt = `A student just completed an activity called "${item.title}" and the result was: "${String(result).substring(0, 200)}...". Write a single sentence of constructive, coach-like feedback. Be encouraging but also suggest one small area for improvement or a question to think about. For example: "Great story! Next time, could you try adding more detail about what the dragon's bakery smells like?"`;
-            const { text: review } = await generateContent({ prompt: feedbackPrompt, systemInstruction: "You are a supportive and insightful educational coach." });
+            const { text: review } = await generateContent({ prompt: feedbackPrompt, systemInstruction: "You are a supportive and insightful educational coach." }, { isPremium: true }); // Feedback is a premium feature from the 'Tutor'
 
             dispatch({
                 type: 'LOG_ACTIVITY_COMPLETION',

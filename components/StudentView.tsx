@@ -62,7 +62,7 @@ const StudentView: React.FC<StudentViewProps> = ({ setActiveView }) => {
                 <p className="text-md md:text-lg text-brand-text-secondary max-w-3xl mx-auto">
                     Empowering neurodiverse learners through adaptive AI agents and personalized educational experiences
                 </p>
-                <p className="text-xs text-brand-text-secondary mt-2">Privacy-by-Design • Echo Project Architecture • AAC Device Optimized</p>
+                <p className="text-xs text-brand-text-secondary mt-2">A Brandon Anthony Myers Project • Privacy-by-Design • Echo Project Architecture</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">

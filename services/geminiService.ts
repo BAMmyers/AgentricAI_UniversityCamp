@@ -2,22 +2,18 @@ import { GoogleGenAI, Chat } from "@google/genai";
 import { ProposedChanges, Agent } from '../types/index';
 
 // ARCHITECTURE NOTE:
-// All API calls originating from this service are conceptually routed through the 
-// secure "Gateway Console". This acts as a protective proxy, handling request
-// brokering, logging, and applying security policies before communicating
-// with any external Large Language Models like the Gemini API.
+// This service now exclusively handles premium, API-key-dependent AI computations.
+// It assumes any call it receives has already been authorized by the logicBroker.
+// It is still responsible for handling the case where the API key is not configured on the server.
 
 const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-  console.warn("API_KEY environment variable is not set. AI functionality will be disabled.");
-}
-
-const ai = new GoogleGenAI({apiKey: API_KEY!});
+const ai = API_KEY ? new GoogleGenAI({apiKey: API_KEY}) : null;
 
 const chatSessions = new Map<string, { chat: Chat, systemInstruction: string }>();
 
 function getChatSession(sessionId: string, systemInstruction: string, model: string): Chat {
+    if (!ai) throw new Error("API Key not configured on server.");
+    
     const sessionData = chatSessions.get(sessionId);
 
     if (!sessionData || sessionData.systemInstruction !== systemInstruction) {
@@ -33,7 +29,7 @@ function getChatSession(sessionId: string, systemInstruction: string, model: str
 }
 
 /**
- * Starts or continues a streaming chat conversation with a specific persona.
+ * Starts or continues a streaming chat conversation with a specific persona. (Premium Only)
  */
 export async function* startChatStream(
     message: string, 
@@ -41,8 +37,8 @@ export async function* startChatStream(
     sessionId: string = 'global_chat',
     agent: Agent | null = null,
 ): AsyncGenerator<string, void, unknown> {
-    if (!API_KEY) {
-      yield "API Key not configured. Please set the API_KEY environment variable.";
+    if (!ai) {
+      yield "API Key not configured. Pro features are enabled, but the server is missing its API Key configuration. Please contact the administrator.";
       return;
     }
 
@@ -50,7 +46,6 @@ export async function* startChatStream(
         const modelToUse = agent?.model || 'gemini-2.5-flash';
         let fullMessage = message;
 
-        // Inject memory context if an agent is provided
         if (agent && agent.coreMemory.length > 0) {
             const memoryContext = agent.coreMemory
                 .map(mem => `[${mem.title}]: ${mem.content}`)
@@ -84,13 +79,13 @@ export interface GenerateContentResult {
 }
 
 /**
- * Sends a single prompt to the model and gets a non-streaming response.
+ * Sends a single prompt to the model and gets a non-streaming response. (Premium Only)
  */
 export async function generateContent(
     params: GenerateContentParams
 ): Promise<GenerateContentResult> {
-    if (!API_KEY) {
-        throw new Error("API Key not configured. Please set the API_KEY environment variable.");
+    if (!ai) {
+        throw new Error("Pro features are enabled, but the API Key is not configured on the server. Please contact the administrator.");
     }
 
     try {
@@ -109,20 +104,19 @@ export async function generateContent(
         };
     } catch (error) {
         console.error("Gemini API error in generateContent:", error);
-        throw error; // Re-throw to be handled by the calling function's catch block
+        throw error;
     }
 }
 
-
 /**
- * Generates a structured JSON object representing proposed code modifications.
+ * Generates a structured JSON object representing proposed code modifications. (Premium Only)
  */
 export async function generateCodeModification(
     prompt: string, 
-    codebaseContext: string
+    codebaseContext: string,
 ): Promise<ProposedChanges> {
-    if (!API_KEY) {
-        throw new Error("API Key not configured.");
+    if (!ai) {
+        throw new Error("Pro features are enabled, but the API Key is not configured on the server.");
     }
 
     const systemInstruction = `

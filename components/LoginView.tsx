@@ -181,7 +181,7 @@ const LoginView: React.FC = () => {
                 return (
                     <div className="space-y-4 animate-fade-in">
                         <div className="text-center">
-                            <h1 className="text-3xl font-bold text-white mb-2">Welcome to AgentricAI</h1>
+                            <h1 className="text-3xl font-bold text-white mb-2">Welcome to AgentricAI University</h1>
                             <p className="text-brand-text-secondary">Please select your role to begin.</p>
                         </div>
                         <RoleButton onClick={() => handleRoleSelect('student')} text="I am a Student" />

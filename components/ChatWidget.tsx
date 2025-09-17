@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, UserRole, ProposedChanges } from '../types/index';
-import { generateCodeModification, startChatStream } from '../services/geminiService';
+import { generateCodeModification, startChatStream } from '../services/logicBroker';
 import { PaperAirplaneIcon, XMarkIcon, ArrowsPointingOutIcon, SparklesIcon } from './icons';
 import { codebase } from '../core/codebaseContext';
 import DiffViewModal from './DiffViewModal';
+import { useAppContext } from '../context/AppContext';
 
 interface ChatWidgetProps {
   currentUserRole: UserRole;
@@ -35,6 +36,7 @@ const getPersonaForRole = (role: UserRole): { instruction: string; greeting: str
 };
 
 export const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserRole }) => {
+    const { state } = useAppContext();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
@@ -44,6 +46,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserRole }) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     
     const persona = getPersonaForRole(currentUserRole);
+    const brokerParams = { isPremium: state.currentUser?.subscriptionPlan === 'pro' };
 
     useEffect(() => {
         if (isOpen) {
@@ -79,10 +82,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserRole }) => {
         setInput('');
         setIsLoading(true);
 
-        // --- CREATOR CODE PATH ---
+        // --- CREATOR CODE PATH (Premium Only) ---
         if (currentUserRole === 'admin') {
             try {
-                const changes = await generateCodeModification(currentInput, codebase);
+                const changes = await generateCodeModification(currentInput, codebase, brokerParams);
                 if (changes.changes.length === 0) {
                      setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: `Request processed, but no code changes were generated. Reason: ${changes.summary}`, timestamp: new Date().toLocaleTimeString() }]);
                 } else {
@@ -105,7 +108,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserRole }) => {
             return;
         }
 
-        // --- STANDARD USER PATH ---
+        // --- STANDARD USER PATH (Freemium) ---
         const botMessageId = (Date.now() + 1).toString();
         setMessages(prev => [...prev, {
             id: botMessageId,
@@ -115,7 +118,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ currentUserRole }) => {
         }]);
 
         try {
-            const stream = await startChatStream(currentInput, persona.instruction);
+            const stream = await startChatStream(currentInput, persona.instruction, brokerParams);
             let responseText = '';
             for await (const chunk of stream) {
                 responseText += chunk;

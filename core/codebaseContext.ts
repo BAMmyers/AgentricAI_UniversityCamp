@@ -5,7 +5,7 @@ export const codebase = `
 --- START OF FILE LICENSE ---
 AgentricAI License Agreement
 
-Copyright (c) 2024 Brandon A Myers (agentricaiuiux@gmail.com) ('AgentricAI')
+Copyright (c) 2024 Brandon Anthony Myers (agentricaiuiux@gmail.com) ('AgentricAI')
 
 Preamble: AgentricAI aims to encourage innovation and experimentation in AI-driven applications and agentic workflows. The license protects the intellectual property of the original author while allowing for community engagement and non-commercial exploration.
 
@@ -23,7 +23,7 @@ Core functionality, branding, or copyright notices may not be removed, altered, 
 
 Redistribution under conflicting license terms is forbidden.
 
-Intellectual Property: All rights to AgentricAI, AgentricAI Studios, agent logic, and design remain exclusively with Brandon A Myers.
+Intellectual Property: All rights to AgentricAI, AgentricAI Studios, agent logic, and design remain exclusively with Brandon Anthony Myers.
 
 Disclaimer of Warranty: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
@@ -32,7 +32,7 @@ Limitation of Liability: IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR AN
 Governing Law: This license shall be governed by and construed in accordance with the laws of the jurisdiction in which the copyright holder resides, without regard to its conflict of law provisions.
 --- END OF FILE LICENSE ---
 --- START OF FILE README.md ---
-# AgentricAI Admin Studio & University Platform
+# AgentricAI University
 
 This repository contains the source code for the AgentricAI Admin Studio, a sophisticated administrative interface for building and managing AI agent workflows, and the associated Student & Parent/Teacher Portals for an AI-powered education system.
 
@@ -44,9 +44,38 @@ A cornerstone of the platform is the **Echo Project Privacy Model**: Student int
 
 ## Creator & Original Designer
 
-This platform was designed and created by **Brandon A Myers**.
+This platform was conceived, designed, and created by **Brandon Anthony Myers**, founder of AgentricAI.
 
 -   **Contact:** [agentricaiuiux@gmail.com](mailto:agentricaiuiux@gmail.com)
+
+## Platform Showcase
+
+**Login & Role Selection**
+![Login Screen](./docs/screenshots/01-login.png)
+
+**Administrative Control Center**
+![Administrative Dashboard](./docs/screenshots/02-dashboard.png)
+
+**Agent Roster & Mission Command**
+![Mission Command View](./docs/screenshots/03-mission-command.png)
+
+**Security Sentinel Console**
+![Security Sentinel Console](./docs/screenshots/04-security-console.png)
+
+**Agent Editor**
+![Agent Editor](./docs/screenshots/05-agent-editor.png)
+
+**Gateway Console**
+![Gateway Console](./docs/screenshots/06-gateway-console.png)
+
+**System Optimization & Performance**
+![System Optimization View](./docs/screenshots/07-system-optimization.png)
+
+**Recursive Code Assistant**
+![AI Code Assistant](./docs/screenshots/08-code-assistant.png)
+
+**AgentricAI University Hub**
+![University Hub](./docs/screenshots/09-university-hub.png)
 
 ## Key Features
 
@@ -71,7 +100,7 @@ This platform was designed and created by **Brandon A Myers**.
 ## Getting Started
 
 1.  **Prerequisites**: A modern web browser with JavaScript enabled.
-2.  **API Key**: The application requires a Google Gemini API key to be available as an environment variable (\`process.env.API_KEY\`).
+2.  **API Key (Optional for Pro Features)**: To use premium features, a Google Gemini API key must be available as an environment variable (\`process.env.API_KEY\`). The core application is functional without it.
 3.  **Running the Application**: Serve the \`index.html\` file through a local web server. All modules are ES6 and are imported directly in the browser.
 
 This project serves as a powerful demonstration of a deeply integrated, agent-driven application architecture designed for a new generation of intelligent, adaptive, and secure software.
@@ -821,22 +850,18 @@ import { GoogleGenAI, Chat } from "@google/genai";
 import { ProposedChanges, Agent } from '../types/index';
 
 // ARCHITECTURE NOTE:
-// All API calls originating from this service are conceptually routed through the 
-// secure "Gateway Console". This acts as a protective proxy, handling request
-// brokering, logging, and applying security policies before communicating
-// with any external Large Language Models like the Gemini API.
+// This service now exclusively handles premium, API-key-dependent AI computations.
+// It assumes any call it receives has already been authorized by the logicBroker.
+// It is still responsible for handling the case where the API key is not configured on the server.
 
 const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-  console.warn("API_KEY environment variable is not set. AI functionality will be disabled.");
-}
-
-const ai = new GoogleGenAI({apiKey: API_KEY!});
+const ai = API_KEY ? new GoogleGenAI({apiKey: API_KEY}) : null;
 
 const chatSessions = new Map<string, { chat: Chat, systemInstruction: string }>();
 
 function getChatSession(sessionId: string, systemInstruction: string, model: string): Chat {
+    if (!ai) throw new Error("API Key not configured on server.");
+    
     const sessionData = chatSessions.get(sessionId);
 
     if (!sessionData || sessionData.systemInstruction !== systemInstruction) {
@@ -852,7 +877,7 @@ function getChatSession(sessionId: string, systemInstruction: string, model: str
 }
 
 /**
- * Starts or continues a streaming chat conversation with a specific persona.
+ * Starts or continues a streaming chat conversation with a specific persona. (Premium Only)
  */
 export async function* startChatStream(
     message: string, 
@@ -860,8 +885,8 @@ export async function* startChatStream(
     sessionId: string = 'global_chat',
     agent: Agent | null = null,
 ): AsyncGenerator<string, void, unknown> {
-    if (!API_KEY) {
-      yield "API Key not configured. Please set the API_KEY environment variable.";
+    if (!ai) {
+      yield "API Key not configured. Pro features are enabled, but the server is missing its API Key configuration. Please contact the administrator.";
       return;
     }
 
@@ -869,7 +894,6 @@ export async function* startChatStream(
         const modelToUse = agent?.model || 'gemini-2.5-flash';
         let fullMessage = message;
 
-        // Inject memory context if an agent is provided
         if (agent && agent.coreMemory.length > 0) {
             const memoryContext = agent.coreMemory
                 .map(mem => \`[\${mem.title}]: \${mem.content}\`)
@@ -903,13 +927,13 @@ export interface GenerateContentResult {
 }
 
 /**
- * Sends a single prompt to the model and gets a non-streaming response.
+ * Sends a single prompt to the model and gets a non-streaming response. (Premium Only)
  */
 export async function generateContent(
     params: GenerateContentParams
 ): Promise<GenerateContentResult> {
-    if (!API_KEY) {
-        throw new Error("API Key not configured. Please set the API_KEY environment variable.");
+    if (!ai) {
+        throw new Error("Pro features are enabled, but the API Key is not configured on the server. Please contact the administrator.");
     }
 
     try {
@@ -928,20 +952,19 @@ export async function generateContent(
         };
     } catch (error) {
         console.error("Gemini API error in generateContent:", error);
-        throw error; // Re-throw to be handled by the calling function's catch block
+        throw error;
     }
 }
 
-
 /**
- * Generates a structured JSON object representing proposed code modifications.
+ * Generates a structured JSON object representing proposed code modifications. (Premium Only)
  */
 export async function generateCodeModification(
     prompt: string, 
-    codebaseContext: string
+    codebaseContext: string,
 ): Promise<ProposedChanges> {
-    if (!API_KEY) {
-        throw new Error("API Key not configured.");
+    if (!ai) {
+        throw new Error("Pro features are enabled, but the API Key is not configured on the server. Please contact the administrator.");
     }
 
     const systemInstruction = \`
@@ -978,724 +1001,479 @@ export async function generateCodeModification(
     }
 }
 --- END OF FILE services/geminiService.ts ---
---- START OF FILE components/AdminPortal.tsx ---
-import React, { useState } from 'react';
-import Dashboard from './Dashboard';
-import Studio from './Studio';
-import AgentEditor from './AgentEditor';
-import StudentView from './StudentView';
-import StudentDashboard from './StudentDashboard';
-import GatewayView from './GatewayView';
-import StudentRoster from './StudentRoster';
-import ParentTeacherConsole from './ParentTeacherConsole';
-import ShowcaseView from './ShowcaseView';
-import AccountView from './AccountView';
-import SystemOptimizationView from './SystemOptimizationView';
-import SecuritySentinelView from './SecuritySentinelView';
-import MissionCommandView from './MissionCommandView';
-import { BrainCircuitIcon, LayoutDashboardIcon, Cog8ToothIcon, AcademicCapIcon, ServerStackIcon, UserGroupIcon, TrophyIcon, ArrowRightOnRectangleIcon, UserIcon, CreditCardIcon, BoltIcon, ShieldCheckIcon, CommandLineIcon } from './icons';
-import { useAppContext } from '../context/AppContext';
-// FIX: Import the centralized View type
-import { View } from '../types/index';
+--- START OF FILE services/localAgentProcessor.ts ---
+import { GenerateContentResult } from './geminiService';
 
-// FIX: Removed local AdminView type in favor of centralized View type
-const AdminPortal: React.FC = () => {
-  const { dispatch, state } = useAppContext();
-  const [activeView, setActiveView] = useState<View>('dashboard');
-  const [activeStudentIdForConsole, setActiveStudentIdForConsole] = useState<string | null>(null);
+// ARCHITECTURE NOTE:
+// This service acts as the "local brain" for the freemium tier.
+// It uses simple, deterministic logic to mimic AI behavior for basic tasks.
+// This ensures the application is functional and engaging without requiring an API key.
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboardIcon className="w-5 h-5" /> },
-    { id: 'student-roster', label: 'Agent Roster', icon: <UserGroupIcon className="w-5 h-5" /> },
-    { id: 'showcase', label: 'Project Showcase', icon: <TrophyIcon className="w-5 h-5" /> },
-    { id: 'mission-command', label: 'Mission Command', icon: <CommandLineIcon className="w-5 h-5" /> },
-    { id: 'security-sentinel', label: 'Security Sentinel', icon: <ShieldCheckIcon className="w-5 h-5" /> },
-    { id: 'studio', label: 'Studio', icon: <BrainCircuitIcon className="w-5 h-5" /> },
-    { id: 'agent-editor', label: 'Agent Editor', icon: <Cog8ToothIcon className="w-5 h-5" /> },
-    { id: 'gateway', label: 'Gateway', icon: <ServerStackIcon className="w-5 h-5" /> },
-    { id: 'system-optimization', label: 'Optimization', icon: <BoltIcon className="w-5 h-5" /> },
-  ];
+/**
+ * Generates a simple, template-based story.
+ */
+function generateLocalStory(prompt: string): string {
+    const topicMatch = prompt.match(/story about a (.*)/i);
+    const topic = topicMatch ? topicMatch[1] : 'a friendly robot';
+    return \`Once upon a time, in a land of shimmering data streams, there lived \${topic}. It loved to explore the digital mountains and swim in the rivers of code. Every day was a new adventure, learning new things and helping its friends. The end.\`;
+}
 
-  const bottomNavItems = [
-     { id: 'account', label: 'Account & Billing', icon: <CreditCardIcon className="w-5 h-5" /> },
-     { id: 'university', label: 'University Hub', icon: <AcademicCapIcon className="w-5 h-5" /> },
-  ];
+/**
+ * Generates a basic, canned response for the free-tier chat widget.
+ */
+async function* getLocalChatResponseStream(message: string): AsyncGenerator<string, void, unknown> {
+    const lowerMessage = message.toLowerCase();
+    let response = "I'm the Platform Guide for the free tier. I can answer basic questions about AgentricAI. For advanced, conversational AI, please upgrade to a Pro plan.";
 
-  const navigateToConsole = (studentId: string) => {
-    setActiveStudentIdForConsole(studentId);
-    setActiveView('parent-teacher-console');
-  }
-  
-  const handleLogout = () => {
-      dispatch({ type: 'LOGOUT' });
-  };
-
-  const renderView = () => {
-    switch (activeView) {
-      case 'dashboard':
-        return <Dashboard setActiveView={setActiveView} />;
-      case 'studio':
-        return <Studio setActiveView={setActiveView} />;
-      case 'agent-editor':
-        return <AgentEditor />;
-      case 'mission-command':
-        return <MissionCommandView />;
-      case 'security-sentinel':
-        return <SecuritySentinelView />;
-      case 'gateway':
-        return <GatewayView />;
-      case 'system-optimization':
-        return <SystemOptimizationView />;
-      case 'student-roster':
-        return <StudentRoster navigateToConsole={navigateToConsole} />;
-      case 'parent-teacher-console':
-        return activeStudentIdForConsole ? <ParentTeacherConsole studentId={activeStudentIdForConsole} setActiveView={setActiveView} /> : <StudentRoster navigateToConsole={navigateToConsole} />;
-      case 'showcase':
-        return <ShowcaseView />;
-      case 'account':
-        return <AccountView />;
-       case 'university':
-        return <StudentView setActiveView={setActiveView} />;
-      default:
-        return <Dashboard setActiveView={setActiveView} />;
+    if (lowerMessage.includes('privacy') || lowerMessage.includes('echo project')) {
+        response = "The Echo Project is our privacy model. It ensures student interactions are private. Only the AI sees the direct interaction, and it generates progress reports for parents/teachers without sharing the raw data. This protects the student's learning space.";
+    } else if (lowerMessage.includes('goal') || lowerMessage.includes('set up')) {
+        response = "Parents and teachers can set goals or add curriculum items in the 'Parent & Teacher Console'. The student's AI companion will then use this information to create new, personalized activities for the student.";
+    } else if (lowerMessage.includes('studio')) {
+        response = "The AgentricAI Studio is an advanced feature for administrators on the Pro plan. It's a powerful node-based editor for creating custom AI workflows and orchestrating teams of specialized agents.";
     }
-  };
 
-  return (
-    <div className="min-h-screen flex">
-      <nav className="w-16 bg-brand-gray border-r border-brand-border flex flex-col items-center py-4 justify-between z-20">
-        <div>
-          <div 
-            className="w-10 h-10 bg-gradient-to-br from-brand-cyan to-brand-primary rounded-lg flex items-center justify-center font-bold text-white text-sm cursor-pointer mb-6"
-            onClick={() => setActiveView('dashboard')}
-            title="AgentricAI University"
-          >
-            AAU
-          </div>
-          <div className="flex flex-col items-center space-y-4">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveView(item.id as View)}
-                className={\`p-3 rounded-lg transition-colors duration-200 \${
-                  activeView === item.id || (activeView === 'parent-teacher-console' && item.id === 'student-roster')
-                    ? 'bg-brand-accent text-white' 
-                    : 'text-brand-text-secondary hover:bg-brand-light-gray hover:text-white'
-                }\`}
-                title={item.label}
-              >
-                {item.icon}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col items-center space-y-4">
-            {bottomNavItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveView(item.id as View)}
-                className={\`p-3 rounded-lg transition-colors duration-200 \${
-                  activeView === item.id ? 'bg-brand-accent text-white' : 'text-brand-text-secondary hover:bg-brand-light-gray hover:text-white'
-                }\`}
-                title={item.label}
-              >
-                {item.icon}
-              </button>
-            ))}
-            <button onClick={handleLogout} className="p-3 rounded-lg text-brand-text-secondary hover:bg-red-800/50 hover:text-white" title="Logout">
-                <ArrowRightOnRectangleIcon className="w-5 h-5"/>
-            </button>
-        </div>
-      </nav>
+    // Simulate a streaming response
+    const words = response.split(' ');
+    for (const word of words) {
+        yield word + ' ';
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+}
 
-      <main className="flex-1 overflow-auto">
-        {renderView()}
-      </main>
-    </div>
-  );
+/**
+ * The main entry point for non-premium, non-streaming content generation.
+ */
+export function generateLocalContent(prompt: string): GenerateContentResult {
+    if (prompt.includes('story')) {
+        return { text: generateLocalStory(prompt) };
+    }
+    
+    if (prompt.includes('Respond with ONLY a JSON object')) {
+        // Return a structured error for JSON requests
+        return { text: JSON.stringify({ error: "Local model cannot generate complex JSON. Please upgrade to Pro." }) };
+    }
+
+    // Default response for other prompts
+    return { text: \`This is a response from the local agent. The prompt was: "\${prompt.substring(0, 100)}...". For advanced generation, a Pro plan is required.\` };
+}
+
+
+/**
+ * The main entry point for non-premium, streaming content generation.
+ */
+export function startLocalChatStream(message: string): AsyncGenerator<string, void, unknown> {
+    return getLocalChatResponseStream(message);
+}
+--- END OF FILE services/localAgentProcessor.ts ---
+--- START OF FILE services/logicBroker.ts ---
+import * as geminiService from './geminiService';
+import * as localAgentProcessor from './localAgentProcessor';
+import { Agent, ProposedChanges } from '../types/index';
+
+// ARCHITECTURE NOTE:
+// This broker is the single point of entry for all AI-related logic in the application.
+// It is responsible for routing requests to either the premium, API-key-dependent
+// \`geminiService\` or the free-tier \`localAgentProcessor\` based on the user's
+// subscription plan. This enforces the freemium model at a foundational level.
+
+interface BrokerParams {
+    isPremium: boolean;
+}
+
+/**
+ * Routes a streaming chat request to the appropriate service.
+ */
+export function startChatStream(
+    message: string,
+    systemInstruction: string,
+    { isPremium }: BrokerParams,
+    sessionId: string = 'global_chat',
+    agent: Agent | null = null,
+): AsyncGenerator<string, void, unknown> {
+    if (isPremium) {
+        return geminiService.startChatStream(message, systemInstruction, sessionId, agent);
+    } else {
+        return localAgentProcessor.startLocalChatStream(message);
+    }
+}
+
+/**
+ * Routes a non-streaming content generation request to the appropriate service.
+ */
+export async function generateContent(
+    params: {
+        prompt: string;
+        systemInstruction?: string;
+        useGoogleSearch?: boolean;
+        model?: string;
+    },
+    { isPremium }: BrokerParams
+): Promise<geminiService.GenerateContentResult> {
+    if (isPremium) {
+        return geminiService.generateContent(params);
+    } else {
+        return localAgentProcessor.generateLocalContent(params.prompt);
+    }
+}
+
+/**
+ * Routes a code modification request. This is a premium-only feature.
+ */
+export async function generateCodeModification(
+    prompt: string,
+    codebaseContext: string,
+    { isPremium }: BrokerParams
+): Promise<ProposedChanges> {
+    if (isPremium) {
+        return geminiService.generateCodeModification(prompt, codebaseContext);
+    } else {
+        return {
+            summary: "Code modification is a premium feature. Please upgrade to a Pro plan.",
+            changes: [],
+        };
+    }
+}
+--- END OF FILE services/logicBroker.ts ---
+--- START OF FILE components/LoginView.tsx ---
+import React, { useState, FormEvent } from 'react';
+import { useAppContext } from '../context/AppContext';
+import { User, UserRole } from '../types/index';
+import { EnvelopeIcon, LockClosedIcon, UserIcon, ArrowUturnLeftIcon, ShieldCheckIcon } from './icons';
+
+const RoleButton: React.FC<{ onClick: () => void, text: string, primary?: boolean }> = ({ onClick, text, primary }) => {
+    const baseClasses = "w-full flex items-center justify-center p-3 rounded-lg font-semibold transition-colors duration-200";
+    const primaryClasses = "bg-brand-primary text-white hover:bg-brand-accent";
+    const secondaryClasses = "bg-brand-gray border border-brand-border text-brand-text hover:bg-brand-light-gray";
+
+    return (
+        <button onClick={onClick} className={\`\${baseClasses} \${primary ? primaryClasses : secondaryClasses}\`}>
+            {text}
+        </button>
+    )
 };
 
-export default AdminPortal;
---- END OF FILE components/AdminPortal.tsx ---
---- START OF FILE components/SystemOptimizationView.tsx ---
-import React, { useState } from 'react';
-import { BoltIcon, TrashIcon, CpuIcon, BeakerIcon, ArrowPathIcon, ShieldCheckIcon } from './icons';
+// Simple hash simulation for the frontend.
+// In a real app, this would be a one-way hash (like bcrypt) performed on a server.
+const hashPassword = (password: string) => \`hashed_\${password}\`;
+
+const LoginView: React.FC = () => {
+    const { state, dispatch } = useAppContext();
+    const [step, setStep] = useState<'roleSelect' | 'email' | 'setPassword' | 'enterPassword' | 'securityScan'>('roleSelect');
+    const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+
+    const resetState = () => {
+        setStep('roleSelect');
+        setSelectedRole(null);
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setError('');
+    };
+
+    const handleRoleSelect = (role: UserRole) => {
+        setSelectedRole(role);
+        setStep('email');
+        setError('');
+    };
+
+    const handleEmailSubmit = (e: FormEvent) => {
+        e.preventDefault();
+        setError('');
+        if (!email.trim()) {
+            setError("Please enter a valid email.");
+            return;
+        }
+        const userExists = state.users.some(u => u.email.toLowerCase() === email.toLowerCase());
+        if (userExists) {
+            setStep('enterPassword');
+        } else {
+            setStep('setPassword');
+        }
+    };
+
+    const runSecurityScan = (callback: () => void) => {
+        setStep('securityScan');
+        setTimeout(callback, 1500);
+    };
+    
+    const handleRegister = (e: FormEvent) => {
+        e.preventDefault();
+        setError('');
+        if (password.length < 8) {
+             setError("Password must be at least 8 characters long.");
+             return;
+        }
+        if (password !== confirmPassword) {
+            setError("Passwords do not match.");
+            return;
+        }
+        if (!selectedRole) {
+            setError("No role selected. Please start over.");
+            return;
+        }
+
+        runSecurityScan(() => {
+            const newUser: User = {
+                id: \`\${selectedRole}-\${Date.now()}\`,
+                email: email,
+                role: selectedRole,
+                subscriptionPlan: selectedRole === 'admin' ? 'pro' : 'free',
+                passwordHash: hashPassword(password),
+            };
+            dispatch({ type: 'REGISTER_USER', payload: newUser });
+            // The reducer automatically logs in the new user and logs the registration event.
+        });
+    };
+
+    const handleLogin = (e: FormEvent) => {
+        e.preventDefault();
+        setError('');
+        
+        runSecurityScan(() => {
+            const userInState = state.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+            
+            if (userInState && userInState.passwordHash === hashPassword(password)) {
+                const userPayload: User = { ...userInState };
+                // The LOGIN reducer will log the successful event
+                dispatch({ type: 'LOGIN', payload: { user: userPayload, password } });
+            } else {
+                // Manually log the failed attempt
+                dispatch({ type: 'LOG_SECURITY_EVENT', payload: { type: 'LOGIN_FAILURE', details: \`Failed login attempt for email: \${email}\` } });
+                setError("Invalid email or password. Please try again.");
+                setStep('enterPassword'); // Go back to the password screen
+            }
+        });
+    };
+    
+    const renderStep = () => {
+        switch (step) {
+            case 'securityScan':
+                return (
+                    <div className="text-center animate-fade-in space-y-4 py-8">
+                        <ShieldCheckIcon className="w-16 h-16 mx-auto text-brand-cyan animate-pulse"/>
+                        <h2 className="text-xl font-bold text-white">Security Scan in Progress</h2>
+                        <p className="text-sm text-brand-text-secondary">Security Sentinel 001 is verifying credentials...</p>
+                    </div>
+                );
+            case 'email':
+                return (
+                    <form onSubmit={handleEmailSubmit} className="space-y-4 animate-fade-in">
+                        <div className="text-center">
+                            <h2 className="text-2xl font-bold text-white">Continue as {selectedRole && selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}</h2>
+                            <p className="text-sm text-brand-text-secondary">Enter your email to login or sign up.</p>
+                        </div>
+                        <div className="relative">
+                            <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-text-secondary" />
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="Enter your email"
+                                required
+                                autoFocus
+                                className="w-full bg-brand-gray border border-brand-border rounded-lg p-3 pl-10 text-brand-text placeholder-brand-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                            />
+                        </div>
+                        <button type="submit" className="w-full p-3 rounded-lg font-semibold bg-brand-primary text-white hover:bg-brand-accent">Continue</button>
+                    </form>
+                );
+            case 'setPassword':
+                return (
+                    <form onSubmit={handleRegister} className="space-y-4 animate-fade-in">
+                        <div className="text-center">
+                            <h2 className="text-2xl font-bold text-white">Create Your Account</h2>
+                            <p className="text-sm text-brand-text-secondary">Set a secure password for <span className="font-semibold text-brand-text">{email}</span>.</p>
+                        </div>
+                        <div className="relative">
+                            <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-text-secondary" />
+                            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="New password (min 8 chars)" required autoFocus className="w-full bg-brand-gray border border-brand-border rounded-lg p-3 pl-10 text-sm text-brand-text"/>
+                        </div>
+                        <div className="relative">
+                            <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-text-secondary" />
+                            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm new password" required className="w-full bg-brand-gray border border-brand-border rounded-lg p-3 pl-10 text-sm text-brand-text"/>
+                        </div>
+                        <button type="submit" className="w-full p-3 rounded-lg font-semibold bg-brand-primary text-white hover:bg-brand-accent">Create Account & Login</button>
+                    </form>
+                );
+            case 'enterPassword':
+                return (
+                     <form onSubmit={handleLogin} className="space-y-4 animate-fade-in">
+                         <div className="text-center">
+                            <h2 className="text-2xl font-bold text-white">Welcome Back!</h2>
+                            <p className="text-sm text-brand-text-secondary">Enter your password for <span className="font-semibold text-brand-text">{email}</span>.</p>
+                        </div>
+                        <div className="relative">
+                            <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-text-secondary" />
+                            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required autoFocus className="w-full bg-brand-gray border border-brand-border rounded-lg p-3 pl-10 text-sm text-brand-text"/>
+                        </div>
+                        <button type="submit" className="w-full p-3 rounded-lg font-semibold bg-brand-primary text-white hover:bg-brand-accent">Login</button>
+                    </form>
+                );
+            case 'roleSelect':
+            default:
+                return (
+                    <div className="space-y-4 animate-fade-in">
+                        <div className="text-center">
+                            <h1 className="text-3xl font-bold text-white mb-2">Welcome to AgentricAI University</h1>
+                            <p className="text-brand-text-secondary">Please select your role to begin.</p>
+                        </div>
+                        <RoleButton onClick={() => handleRoleSelect('student')} text="I am a Student" />
+                        <RoleButton onClick={() => handleRoleSelect('parent')} text="I am a Parent" />
+                        <RoleButton onClick={() => handleRoleSelect('teacher')} text="I am a Teacher" />
+                        <RoleButton onClick={() => handleRoleSelect('admin')} text="I am a Creator / Admin" primary />
+                    </div>
+                );
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-brand-dark p-4">
+            <div className="w-full max-w-sm">
+                {step !== 'roleSelect' && step !== 'securityScan' && (
+                    <button onClick={resetState} className="flex items-center gap-2 text-sm text-brand-text-secondary hover:text-white mb-4">
+                        <ArrowUturnLeftIcon className="w-4 h-4" />
+                        Back to Role Selection
+                    </button>
+                )}
+                <div className="p-8 space-y-6 bg-brand-light-gray rounded-xl shadow-2xl border border-brand-border">
+                    {renderStep()}
+                    {error && <p className="text-red-400 text-sm text-center pt-2">{error}</p>}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default LoginView;
+--- END OF FILE components/LoginView.tsx ---
+--- START OF FILE components/StudentView.tsx ---
+import React from 'react';
+// FIX: Changed import path for View type
+import { View } from '../types/index';
+import { ShieldCheckIcon, BrainCircuitIcon, BoltIcon, UserGroupIcon, IdentificationIcon, LockClosedIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 
-const ControlCard: React.FC<{ title: string; description: string; children: React.ReactNode }> = ({ title, description, children }) => (
+interface StudentViewProps {
+    setActiveView: (view: View) => void;
+}
+
+const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; children: React.ReactNode; }> = ({ icon, title, children }) => (
     <div className="bg-brand-gray border border-brand-border rounded-lg p-6">
-        <h2 className="text-lg font-bold text-white">{title}</h2>
-        <p className="text-sm text-brand-text-secondary mt-1 mb-6">{description}</p>
-        <div className="space-y-4">
-            {children}
+        <div className="flex items-center text-brand-cyan mb-3">
+            {icon}
+            <h3 className="ml-3 text-lg font-semibold text-white">{title}</h3>
         </div>
+        <p className="text-sm text-brand-text-secondary leading-relaxed">{children}</p>
     </div>
 );
 
-const ToggleSwitch: React.FC<{ label: string; enabled: boolean; setEnabled: (enabled: boolean) => void }> = ({ label, enabled, setEnabled }) => (
-    <div className="flex items-center justify-between">
-        <span className="text-sm text-brand-text">{label}</span>
-        <button onClick={() => setEnabled(!enabled)} className={\`relative inline-flex h-6 w-11 items-center rounded-full transition-colors \${enabled ? 'bg-brand-primary' : 'bg-brand-dark'}\`}>
-            <span className={\`inline-block h-4 w-4 transform rounded-full bg-white transition-transform \${enabled ? 'translate-x-6' : 'translate-x-1'}\`} />
+const InterfaceCard: React.FC<{ icon: React.ReactNode; title: string; children: React.ReactNode; buttonText: string; buttonColor: string; onClick?: () => void; }> = ({ icon, title, children, buttonText, buttonColor, onClick }) => (
+    <div className="bg-brand-gray border border-brand-border rounded-lg p-6 flex flex-col">
+        <div className="flex items-center mb-3">
+            <span className="text-brand-cyan">{icon}</span>
+            <h3 className="ml-3 text-xl font-bold text-white">{title}</h3>
+        </div>
+        <p className="text-sm text-brand-text-secondary flex-grow mb-6">{children}</p>
+        <button onClick={onClick} className={\`w-full py-2 rounded-md font-semibold text-white transition-transform duration-200 hover:scale-105 \${buttonColor}\`}>
+            {buttonText}
         </button>
     </div>
 );
 
-const SystemOptimizationView: React.FC = () => {
+const StudentView: React.FC<StudentViewProps> = ({ setActiveView }) => {
     const { dispatch } = useAppContext();
-    const [predictiveLoading, setPredictiveLoading] = useState(true);
-    const [responseStreaming, setResponseStreaming] = useState(true);
-    const [renderFrequency, setRenderFrequency] = useState('high');
-    const [diagnosticsStatus, setDiagnosticsStatus] = useState<'idle' | 'running' | 'complete'>('idle');
-    const [scanStatus, setScanStatus] = useState<'idle' | 'running' | 'complete'>('idle');
 
-    const handleClearCache = () => {
-        dispatch({ type: 'SHOW_TOAST', payload: { message: 'LLM and data caches have been purged.', type: 'success' } });
-    };
-
-    const handlePrefetch = () => {
-        dispatch({ type: 'SHOW_TOAST', payload: { message: 'Prefetching core models initiated.', type: 'info' } });
-    };
-
-    const runDiagnostics = () => {
-        setDiagnosticsStatus('running');
-        setTimeout(() => {
-            setDiagnosticsStatus('complete');
-            dispatch({ type: 'SHOW_TOAST', payload: { message: 'System diagnostics complete. All systems nominal.', type: 'success' } });
-        }, 3000);
-    };
-    
-    const runIntegrityScan = () => {
-        setScanStatus('running');
-        dispatch({ type: 'LOG_SECURITY_EVENT', payload: { type: 'INTEGRITY_SCAN_STARTED', details: 'Medic Agent initiated system-wide integrity scan.' } });
-        setTimeout(() => {
-            setScanStatus('complete');
-            dispatch({ type: 'LOG_SECURITY_EVENT', payload: { type: 'INTEGRITY_SCAN_COMPLETED', details: 'Medic Agent scan complete. No vulnerabilities found. 2 "vaccine" patches applied.' } });
-            dispatch({ type: 'SHOW_TOAST', payload: { message: 'System Integrity Scan Complete.', type: 'success' } });
-        }, 4000);
+    const handleEnroll = () => {
+        dispatch({ type: 'ENROLL_STUDENT' });
+        // FIX: Changed to a valid view for the admin portal.
+        setActiveView('student-roster');
     };
 
     return (
-        <div className="p-6 bg-brand-dark min-h-full">
-            <header className="flex items-center mb-6">
-                <BoltIcon className="w-8 h-8 mr-3 text-brand-cyan" />
-                <div>
-                    <h1 className="text-2xl font-bold text-white">System Optimization & Performance</h1>
-                    <p className="text-brand-text-secondary">Fine-tune system parameters and manage resources for optimal performance.</p>
+        <div className="p-4 md:p-8 bg-brand-dark min-h-full">
+            <header className="flex justify-between items-center mb-10">
+                <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-brand-cyan to-brand-primary rounded-lg flex items-center justify-center font-bold text-white text-sm mr-4">
+                        AAU
+                    </div>
+                    <h1 className="text-2xl font-bold text-white">AgentricAI University</h1>
+                </div>
+                <div className="flex items-center">
+                    <span className="w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                    <span className="text-sm text-green-400 font-semibold">Ecosystem Active</span>
                 </div>
             </header>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {/* Performance Tuning */}
-                <ControlCard
-                    title="Performance Tuning"
-                    description="Adjust real-time performance settings. Changes are applied immediately."
-                >
-                    <ToggleSwitch label="Enable Predictive Loading" enabled={predictiveLoading} setEnabled={setPredictiveLoading} />
-                    <ToggleSwitch label="Agent Response Streaming" enabled={responseStreaming} setEnabled={setResponseStreaming} />
-                    <div>
-                        <label className="text-sm text-brand-text block mb-2">UI Render Frequency</label>
-                        <select
-                            value={renderFrequency}
-                            onChange={(e) => setRenderFrequency(e.target.value)}
-                            className="w-full bg-brand-light-gray border border-brand-border rounded-md px-3 py-2 text-sm"
-                        >
-                            <option value="high">High (Fluid)</option>
-                            <option value="medium">Medium (Balanced)</option>
-                            <option value="low">Low (Resource Saver)</option>
-                        </select>
-                    </div>
-                </ControlCard>
-
-                {/* System Integrity & Security */}
-                <ControlCard
-                    title="System Integrity & Security"
-                    description="Deploy maintenance agents to scan for vulnerabilities and ensure code integrity."
-                >
-                    <button
-                        onClick={runIntegrityScan}
-                        disabled={scanStatus === 'running'}
-                        className="w-full bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-400 font-bold py-3 rounded-md flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                         {scanStatus === 'running' ? (
-                            <>
-                                <CpuIcon className="w-5 h-5 animate-spin" />
-                                <span>Medic Agent Scanning...</span>
-                            </>
-                        ) : (
-                             <>
-                                <ShieldCheckIcon className="w-5 h-5" />
-                                <span>Run Integrity Scan</span>
-                             </>
-                        )}
-                    </button>
-                    <div className="text-sm p-3 bg-brand-dark rounded-md h-32 overflow-y-auto font-mono text-xs">
-                         <p className="text-brand-text-secondary">&gt; Medic Agent standing by...</p>
-                         <p className="text-brand-text-secondary">&gt; Mechanic Agent on alert for repairs.</p>
-                         {scanStatus === 'running' && <p className="text-yellow-400 animate-pulse">&gt; Scanning for known vulnerabilities...</p>}
-                         {scanStatus === 'complete' && 
-                            <>
-                                <p className="text-green-400">&gt; Scan complete. 0 critical threats found.</p>
-                                <p className="text-yellow-400">&gt; Identified 2 minor code integrity issues.</p>
-                                <p className="text-cyan-400">&gt; Mechanic Agent dispatched to apply "vaccine" patches.</p>
-                                <p className="text-green-400">&gt; Patches applied successfully.</p>
-                                <p className="text-brand-text-secondary">&gt; System secure. Returning to standby.</p>
-                            </>
-                        }
-                    </div>
-                </ControlCard>
-                
-                {/* System Diagnostics */}
-                <ControlCard
-                    title="System Diagnostics"
-                    description="Run a full system check to ensure all agents and services are operational."
-                >
-                    <button
-                        onClick={runDiagnostics}
-                        disabled={diagnosticsStatus === 'running'}
-                        className="w-full bg-brand-primary hover:bg-brand-accent text-white font-bold py-3 rounded-md flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                        {diagnosticsStatus === 'running' ? (
-                            <>
-                                <CpuIcon className="w-5 h-5 animate-spin" />
-                                <span>Running Diagnostics...</span>
-                            </>
-                        ) : (
-                             <>
-                                <BeakerIcon className="w-5 h-5" />
-                                <span>Run System Diagnostics</span>
-                             </>
-                        )}
-                    </button>
-                    <div className="text-sm p-3 bg-brand-dark rounded-md h-32 overflow-y-auto font-mono text-xs">
-                        <p className="text-brand-text-secondary">&gt; Initiating diagnostics...</p>
-                        <p className="text-brand-text-secondary">&gt; Reviewing logs from Bug Agent...</p>
-                        {diagnosticsStatus === 'running' && <p className="text-yellow-400 animate-pulse">&gt; Checking agent integrity...</p>}
-                        {diagnosticsStatus === 'complete' && 
-                            <>
-                                <p className="text-green-400">&gt; Agent integrity check: PASSED</p>
-                                <p className="text-green-400">&gt; Gateway connection: STABLE</p>
-                                <p className="text-green-400">&gt; API latency: 45ms (NOMINAL)</p>
-                                <p className="text-green-400">&gt; All systems nominal.</p>
-                            </>
-                        }
-                    </div>
-                </ControlCard>
-            </div>
-        </div>
-    );
-};
-
-export default SystemOptimizationView;
---- END OF FILE components/SystemOptimizationView.tsx ---
---- START OF FILE components/SecuritySentinelView.tsx ---
-import React from 'react';
-import { useAppContext } from '../context/AppContext';
-import { ShieldCheckIcon, UserIcon } from './icons';
-import { SecurityLogEntry, SecurityEventType } from '../types/index';
-
-const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; color: string; }> = ({ title, value, icon, color }) => (
-    <div className="bg-brand-gray border border-brand-border rounded-lg p-4">
-      <div className="flex justify-between items-start">
-        <span className="text-sm font-medium text-brand-text-secondary">{title}</span>
-        <span className={color}>{icon}</span>
-      </div>
-      <div className="mt-2 text-3xl font-semibold text-brand-text">{value}</div>
-    </div>
-);
-
-const SecuritySentinelView: React.FC = () => {
-    const { state } = useAppContext();
-    const { securityLog, users } = state;
-
-    const failedLogins = securityLog.filter(log => log.type === 'LOGIN_FAILURE').length;
-    const successfulLogins = securityLog.filter(log => log.type === 'LOGIN_SUCCESS').length;
-    
-    const getLogTypeStyle = (type: SecurityEventType) => {
-        switch (type) {
-            case 'LOGIN_SUCCESS':
-                return { bg: 'bg-green-600/20', text: 'text-green-400', label: 'Login Success' };
-            case 'LOGIN_FAILURE':
-                return { bg: 'bg-red-600/20', text: 'text-red-400', label: 'Login Failure' };
-            case 'USER_REGISTERED':
-                return { bg: 'bg-blue-600/20', text: 'text-blue-400', label: 'User Registered' };
-            case 'LOGOUT':
-                return { bg: 'bg-yellow-600/20', text: 'text-yellow-400', label: 'User Logout' };
-            case 'SYSTEM_ERROR_DETECTED':
-                return { bg: 'bg-orange-600/20', text: 'text-orange-400', label: 'System Error' };
-            case 'INTEGRITY_SCAN_STARTED':
-                return { bg: 'bg-cyan-600/20', text: 'text-cyan-400', label: 'Integrity Scan Start' };
-            case 'INTEGRITY_SCAN_COMPLETED':
-                return { bg: 'bg-purple-600/20', text: 'text-purple-400', label: 'Integrity Scan End' };
-            default:
-                return { bg: 'bg-brand-dark', text: 'text-brand-text-secondary', label: 'System Event' };
-        }
-    };
-
-    return (
-        <div className="p-6 bg-brand-dark min-h-full">
-            <header className="flex items-center mb-6">
-                <ShieldCheckIcon className="w-8 h-8 mr-3 text-brand-cyan" />
-                <div>
-                    <h1 className="text-2xl font-bold text-white">Security Sentinel Console</h1>
-                    <p className="text-brand-text-secondary">Real-time monitoring of system-wide security events.</p>
-                </div>
-            </header>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <StatCard 
-                    title="Total Security Events" 
-                    value={securityLog.length}
-                    icon={<ShieldCheckIcon className="w-6 h-6" />}
-                    color="text-brand-cyan"
-                />
-                <StatCard 
-                    title="Registered Users" 
-                    value={users.length}
-                    icon={<UserIcon className="w-6 h-6" />}
-                    color="text-brand-text-secondary"
-                />
-                <StatCard 
-                    title="Successful Logins (session)" 
-                    value={successfulLogins}
-                    icon={<ShieldCheckIcon className="w-6 h-6" />}
-                    color="text-green-400"
-                />
-                 <StatCard 
-                    title="Failed Login Attempts" 
-                    value={failedLogins}
-                    icon={<ShieldCheckIcon className="w-6 h-6" />}
-                    color="text-red-400"
-                />
-            </div>
             
-            <div className="bg-brand-gray border border-brand-border rounded-lg p-4">
-                <h2 className="text-lg font-semibold text-white mb-3">Live Event Log</h2>
-                <div className="overflow-y-auto h-[60vh] font-mono text-xs pr-2">
-                    {securityLog.length === 0 ? (
-                        <p className="text-center text-brand-text-secondary p-8">No security events logged yet.</p>
-                    ) : (
-                        <div className="space-y-2">
-                            {securityLog.map((log, index) => {
-                                const styles = getLogTypeStyle(log.type);
-                                return (
-                                    <div key={index} className="grid grid-cols-12 gap-4 items-center p-2 bg-brand-dark rounded-md">
-                                        <div className="col-span-3 text-brand-text-secondary">{new Date(log.timestamp).toLocaleString()}</div>
-                                        <div className="col-span-2">
-                                            <span className={\`px-2 py-1 rounded-full text-xs font-semibold \${styles.bg} \${styles.text}\`}>
-                                                {styles.label}
-                                            </span>
-                                        </div>
-                                        <div className="col-span-7 text-brand-text">{log.details}</div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
+            <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-brand-cyan to-brand-secondary">
+                    Revolutionary AI-Powered Education
+                </h2>
+                <p className="text-md md:text-lg text-brand-text-secondary max-w-3xl mx-auto">
+                    Empowering neurodiverse learners through adaptive AI agents and personalized educational experiences
+                </p>
+                <p className="text-xs text-brand-text-secondary mt-2">A Brandon Anthony Myers Project • Privacy-by-Design • Echo Project Architecture</p>
             </div>
-        </div>
-    );
-};
 
-export default SecuritySentinelView;
---- END OF FILE components/SecuritySentinelView.tsx ---
---- START OF FILE components/SystemStatusBar.tsx ---
-import React from 'react';
-import { useAppContext } from '../context/AppContext';
-import { CpuIcon, ArrowPathIcon } from './icons';
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                <FeatureCard icon={<ShieldCheckIcon className="w-8 h-8"/>} title="Stealth Agent System">
+                    Self-evolving AI agents that adapt to individual learning patterns and provide personalized support.
+                </FeatureCard>
+                <FeatureCard icon={<BrainCircuitIcon className="w-8 h-8"/>} title="Neurodiverse Optimization">
+                    Specially designed for neurodiverse learners with sensory-friendly interfaces and adaptive content.
+                </FeatureCard>
+                <FeatureCard icon={<BoltIcon className="w-8 h-8"/>} title="Real-time Adaptation">
+                    Dynamic content adjustment based on learning progress, engagement levels, and individual preferences.
+                </FeatureCard>
+            </div>
 
-const SystemStatusBar: React.FC = () => {
-    const { state, dispatch } = useAppContext();
-    const { systemError } = state;
-
-    if (!systemError) {
-        return null;
-    }
-
-    const handleReload = () => {
-        dispatch({ type: 'CLEAR_SYSTEM_ERROR' });
-        window.location.reload();
-    };
-
-    return (
-        <div className="fixed top-0 left-0 right-0 bg-red-800/90 backdrop-blur-sm border-b-2 border-red-500 text-white p-3 z-[200] flex items-center justify-between animate-fade-in-down">
-            <div className="flex items-center gap-3">
-                <CpuIcon className="w-6 h-6 text-yellow-300 animate-pulse" />
+            <div className="bg-brand-gray border border-brand-border rounded-lg p-6 mb-16 flex items-center">
+                <LockClosedIcon className="w-8 h-8 text-yellow-400 mr-4 flex-shrink-0"/>
                 <div>
-                    <h3 className="font-bold">Bug Agent Alert: System Anomaly Detected</h3>
-                    <p className="text-xs text-red-200">An operational error was caught. The agent is standing by to apply corrective actions.</p>
-                </div>
-            </div>
-            <button
-                onClick={handleReload}
-                className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded-md flex items-center gap-2 text-sm"
-            >
-                <ArrowPathIcon className="w-4 h-4" />
-                Apply Fix & Reload
-            </button>
-        </div>
-    );
-};
-
-export default SystemStatusBar;
---- END OF FILE components/SystemStatusBar.tsx ---
---- START OF FILE components/MissionCommandView.tsx ---
-import React, { useState, useEffect } from 'react';
-import { manifestAgents } from '../core/agentManifest';
-import { ManifestAgent, MissionPlan, MissionStep, CommLogEntry, MissionStepStatus } from '../types/index';
-import { useAppContext } from '../context/AppContext';
-import { PlusIcon, MinusCircleIcon, PaperAirplaneIcon, SparklesIcon, PlayIcon, CpuIcon, CheckCircleIcon, XCircleIcon, CommandLineIcon } from './icons';
-import { generateContent } from '../services/geminiService';
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-const MissionCommandView: React.FC = () => {
-    const { state, dispatch } = useAppContext();
-    const [objective, setObjective] = useState('');
-    const [isPlanning, setIsPlanning] = useState(false);
-    const [isExecuting, setIsExecuting] = useState(false);
-    const [commLog, setCommLog] = useState<CommLogEntry[]>([]);
-    
-    useEffect(() => {
-        // Clear logs and execution status when plan or team changes
-        setIsExecuting(false);
-        setCommLog([]);
-    }, [state.missionPlan, state.missionTeam]);
-
-
-    const groupedAgents = manifestAgents.reduce((acc, agent) => {
-        const category = agent.category || 'Uncategorized';
-        if (!acc[category]) {
-            acc[category] = [];
-        }
-        acc[category].push(agent);
-        return acc;
-    }, {} as Record<string, ManifestAgent[]>);
-
-    const handleAddAgent = (agent: ManifestAgent) => {
-        dispatch({ type: 'ADD_AGENT_TO_TEAM', payload: agent });
-    };
-
-    const handleRemoveAgent = (agentId: string) => {
-        dispatch({ type: 'REMOVE_AGENT_FROM_TEAM', payload: agentId });
-    };
-    
-    const handleGeneratePlan = async () => {
-        if (!objective.trim() || state.missionTeam.length === 0) {
-            dispatch({ type: 'SHOW_TOAST', payload: { message: 'Please enter an objective and assemble a team.', type: 'error' } });
-            return;
-        }
-        setIsPlanning(true);
-        dispatch({ type: 'SET_MISSION_PLAN', payload: null });
-        setCommLog([]);
-
-        const teamDetails = state.missionTeam.map(a => \`- \${a.name}: \${a.role}\`).join('\\n');
-        const prompt = \`
-            You are Orchestrator Alpha, an expert AI mission planner. Your task is to create a detailed, step-by-step mission plan to achieve a user's objective using a designated team of specialized agents.
-
-            **Objective:** "\${objective}"
-
-            **Available Team:**
-            \${teamDetails}
-
-            Analyze the team's capabilities and the objective. Break the objective down into a logical sequence of actions. For each step, assign the most appropriate agent from the team.
-
-            Respond with ONLY a JSON object with two keys:
-            1. "overview": A brief, one-sentence summary of the overall mission strategy.
-            2. "steps": An array of objects, where each object has the keys "step" (number), "agent" (the name of the assigned agent), "action" (a concise verb-based description of the task, e.g., "Analyze financial data"), and "objective" (a detailed description of what this step aims to accomplish).
-        \`;
-
-        try {
-            const { text } = await generateContent({ prompt });
-            const plan: MissionPlan = JSON.parse(text);
-            dispatch({ type: 'SET_MISSION_PLAN', payload: plan });
-        } catch (e) {
-            console.error("Failed to parse mission plan:", e);
-            const errorMessage = e instanceof Error ? e.message : "The Orchestrator AI failed to generate a valid plan. Please try refining your objective.";
-            dispatch({ type: 'SHOW_TOAST', payload: { message: errorMessage, type: 'error' } });
-        } finally {
-            setIsPlanning(false);
-        }
-    };
-    
-    const addCommLog = (source: string, content: string, target?: string) => {
-        setCommLog(prev => [{ timestamp: new Date().toLocaleTimeString(), source, target, content }, ...prev]);
-    }
-    
-    const executeMission = async () => {
-        if (!state.missionPlan) return;
-        setIsExecuting(true);
-        let previousStepResult = \`Initial Objective: "\${objective}"\`;
-        
-        addCommLog("Orchestrator Alpha", "Beginning mission execution.");
-        
-        for (const step of state.missionPlan.steps) {
-            const agent = state.missionTeam.find(a => a.name === step.agent) || manifestAgents.find(a => a.name === step.agent);
-            if (!agent) {
-                const errorResult = \`Agent "\${step.agent}" not found in team or manifest.\`;
-                dispatch({ type: 'UPDATE_MISSION_STEP_STATE', payload: { step: step.step, status: 'error', result: errorResult }});
-                addCommLog("Orchestrator Alpha", \`Execution failed: Agent "\${step.agent}" not found.\`, "System");
-                setIsExecuting(false);
-                return;
-            }
-
-            dispatch({ type: 'UPDATE_MISSION_STEP_STATE', payload: { step: step.step, status: 'active' }});
-            addCommLog("Orchestrator Alpha", \`Delegating task "\${step.action}" to \${agent.name}.\`, agent.name);
-            await sleep(1500);
-
-            const prompt = \`
-                You are the agent "\${agent.name}". Your role is: "\${agent.role}".
-                Your current task is: "\${step.action}".
-                The overall mission objective is: "\${objective}".
-                The result from the previous step is: "\${previousStepResult}".
-
-                Based on all this information, perform your task and provide a concise result or summary of your action.
-            \`;
-            
-            try {
-                const { text: result } = await generateContent({ prompt });
-                previousStepResult = result;
-                dispatch({ type: 'UPDATE_MISSION_STEP_STATE', payload: { step: step.step, status: 'completed', result }});
-                addCommLog(agent.name, \`Task complete. Result: \${result.substring(0, 100)}...\`, "Orchestrator Alpha");
-            } catch (e) {
-                const errorMessage = e instanceof Error ? e.message : "Unknown AI error.";
-                dispatch({ type: 'UPDATE_MISSION_STEP_STATE', payload: { step: step.step, status: 'error', result: errorMessage }});
-                addCommLog(agent.name, \`Task failed with critical error: \${errorMessage}\`, "Orchestrator Alpha");
-                setIsExecuting(false);
-                return;
-            }
-        }
-        addCommLog("Orchestrator Alpha", "All mission steps completed successfully.");
-        setIsExecuting(false);
-    };
-
-    const MissionStepStatusIcon: React.FC<{status?: MissionStepStatus}> = ({ status }) => {
-        switch (status) {
-            case 'active': return <CpuIcon className="w-4 h-4 text-yellow-400 animate-spin" />;
-            case 'completed': return <CheckCircleIcon className="w-4 h-4 text-green-400" />;
-            case 'error': return <XCircleIcon className="w-4 h-4 text-red-400" />;
-            default: return <div className="w-4 h-4 border-2 border-brand-border rounded-full" />;
-        }
-    };
-
-    return (
-        <div className="flex h-full bg-brand-dark text-brand-text font-sans">
-            <div className="w-1/3 bg-brand-gray border-r border-brand-border p-4 flex flex-col">
-                <h2 className="text-lg font-bold text-white mb-4">Agent Roster</h2>
-                <div className="flex-grow overflow-y-auto pr-2">
-                    {Object.entries(groupedAgents).map(([category, agents]) => (
-                        <div key={category} className="mb-6">
-                            <h3 className="text-sm font-semibold text-brand-primary mb-2 sticky top-0 bg-brand-gray py-1">{category}</h3>
-                            <div className="space-y-2">
-                                {agents.map(agent => (
-                                    <div key={agent.id} className="bg-brand-light-gray p-3 rounded-md border border-brand-border">
-                                        <div className="flex justify-between items-center">
-                                            <h4 className="font-bold text-sm text-white">{agent.name}</h4>
-                                            <button onClick={() => handleAddAgent(agent)} className="text-brand-text-secondary hover:text-white transition-colors" title="Add to team">
-                                                <PlusIcon className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                        <p className="text-xs text-brand-text-secondary mt-1">{agent.role}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+                    <h4 className="font-bold text-white">Echo Project Privacy Model</h4>
+                    <p className="text-sm text-brand-text-secondary">
+                        Student interactions are completely private - only the AI sees them. Parents and teachers receive AI-generated progress reports without accessing direct student interactions. This revolutionary approach protects the student's right to a private, unobserved learning space while providing meaningful insights to caregivers.
+                    </p>
                 </div>
             </div>
 
-            <div className="flex-1 p-6 flex flex-col">
-                 <header className="flex-shrink-0 flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-3">
-                        <CommandLineIcon className="w-8 h-8 text-brand-cyan" />
-                        <div>
-                            <h1 className="text-2xl font-bold text-white">Mission Command</h1>
-                            <p className="text-brand-text-secondary">Interface with Orchestrator Alpha to execute complex objectives.</p>
-                        </div>
-                    </div>
-                    {state.missionPlan && !isExecuting && (
-                        <button onClick={executeMission} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center gap-2">
-                            <PlayIcon className="w-5 h-5" /> Execute Mission
-                        </button>
-                    )}
-                 </header>
-                <div className="flex-grow bg-brand-gray border border-brand-border rounded-md p-4 flex flex-col overflow-y-auto">
-                    {isPlanning ? (
-                        <div className="flex-grow flex items-center justify-center text-center text-brand-text-secondary">
-                            <div>
-                                <SparklesIcon className="w-12 h-12 mx-auto text-brand-cyan animate-pulse"/>
-                                <p className="mt-2">Orchestrator Alpha is generating a mission plan...</p>
-                            </div>
-                        </div>
-                    ) : state.missionPlan ? (
-                         <div>
-                            <h3 className="font-bold text-white">Mission Overview:</h3>
-                            <p className="text-sm text-brand-text-secondary italic mb-4">{state.missionPlan.overview}</p>
-                            <div className="space-y-3">
-                                {state.missionPlan.steps.map(step => (
-                                    <div key={step.step} className="bg-brand-dark p-3 rounded-lg border border-brand-border">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <MissionStepStatusIcon status={step.status} />
-                                                <h4 className="font-semibold text-brand-cyan">Step {step.step}: {step.action}</h4>
-                                            </div>
-                                            <span className="text-xs font-mono bg-brand-light-gray px-2 py-1 rounded">{step.agent}</span>
-                                        </div>
-                                        <p className="text-sm text-brand-text-secondary mt-1">{step.objective}</p>
-                                        {step.result && <pre className="text-xs mt-2 p-2 bg-brand-light-gray/50 border border-brand-border rounded-md whitespace-pre-wrap">{step.result}</pre>}
-                                    </div>
-                                ))}
-                            </div>
-                         </div>
-                    ) : (
-                         <div className="text-sm text-brand-text-secondary p-4">Awaiting objective. Assemble your team and define the mission. Orchestrator Alpha is standing by.</div>
-                    )}
-                </div>
-                 <form onSubmit={(e) => { e.preventDefault(); handleGeneratePlan(); }} className="mt-4 flex gap-2">
-                    <input type="text" value={objective} onChange={e => setObjective(e.target.value)} placeholder="Define mission objective..." className="w-full bg-brand-light-gray border border-brand-border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
-                    <button type="submit" disabled={isPlanning || isExecuting} className="bg-brand-primary hover:bg-brand-accent text-white px-4 py-2 rounded-md flex items-center gap-2 disabled:bg-brand-text-secondary">
-                        <PaperAirplaneIcon className="w-5 h-5" />
-                        <span>Generate Plan</span>
-                    </button>
-                </form>
-            </div>
-
-            <div className="w-1/3 bg-brand-gray border-l border-brand-border p-4 flex flex-col">
-                <h2 className="text-lg font-bold text-white mb-4">Assembled Team</h2>
-                <div className="overflow-y-auto mb-4">
-                    {state.missionTeam.length === 0 ? (
-                        <p className="text-sm text-brand-text-secondary">No agents on team.</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {state.missionTeam.map(agent => (
-                                <div key={agent.id} className="bg-brand-light-gray p-3 rounded-md border border-brand-border flex justify-between items-start">
-                                    <div>
-                                        <h4 className="font-bold text-sm text-white">{agent.name}</h4>
-                                        <p className="text-xs text-brand-text-secondary mt-1">Status: STANDBY</p>
-                                    </div>
-                                    <button onClick={() => handleRemoveAgent(agent.id)} className="text-red-500 hover:text-red-400 transition-colors flex-shrink-0 ml-2" title="Remove from team">
-                                        <MinusCircleIcon className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-                 <h2 className="text-lg font-bold text-white mb-4 border-t border-brand-border pt-4">Communication Bus</h2>
-                 <div className="flex-grow overflow-y-auto font-mono text-xs space-y-2">
-                    {commLog.slice().reverse().map((log, i) => (
-                        <div key={i} className="animate-fade-in">
-                            <p className="text-gray-500">{log.timestamp}</p>
-                            <p className="text-brand-text-secondary"><span className="text-cyan-400">{log.source}</span> {log.target && \`-> <span class="text-purple-400">\${log.target}</span>\`}: <span className="text-brand-text">{log.content}</span></p>
-                        </div>
-                    ))}
-                 </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <InterfaceCard 
+                    icon={<UserGroupIcon className="w-8 h-8" />} 
+                    title="Student Interface" 
+                    buttonText="Enroll & Begin Learning"
+                    buttonColor="bg-green-600 hover:bg-green-700"
+                    onClick={handleEnroll}
+                >
+                    <b>Echo Mode</b> - The private student learning space with symbol-based communication, large touch-friendly buttons, and offline functionality. Designed specifically for AAC devices and neurodiverse learners.
+                </InterfaceCard>
+                <InterfaceCard 
+                    icon={<IdentificationIcon className="w-8 h-8" />} 
+                    title="Parent/Teacher Interface" 
+                    buttonText="Try Admin Interface"
+                    buttonColor="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => setActiveView('dashboard')}
+                >
+                    <b>Studio Mode</b> - Set learning goals in natural language, review AI-generated progress reports, and manage curriculum without accessing private student interactions.
+                </InterfaceCard>
+                <InterfaceCard 
+                    icon={<BrainCircuitIcon className="w-8 h-8" />} 
+                    title="Agent Network" 
+                    buttonText="View Agent Status"
+                    buttonColor="bg-brand-primary hover:bg-brand-accent"
+                    onClick={() => setActiveView('dashboard')}
+                >
+                    View the complete faculty of AI agents including The Guardian (ethical oversight), Echo Orchestrator (adaptive learning), and specialized educational agents.
+                </InterfaceCard>
             </div>
         </div>
     );
 };
 
-export default MissionCommandView;
---- END OF FILE components/MissionCommandView.tsx ---
+export default StudentView;
+--- END OF FILE components/StudentView.tsx ---
 `;

@@ -7,7 +7,7 @@ import {
 } from './icons';
 import { useAppContext } from '../context/AppContext';
 import { Agent, ChatMessage, ToolConfig, SubscriptionPlan } from '../types/index';
-import { startChatStream, generateContent } from '../services/geminiService';
+import { startChatStream, generateContent } from '../services/logicBroker';
 import { AVAILABLE_TOOLS } from '../core/tools';
 
 const SectionHeader: React.FC<{ title: string; children?: React.ReactNode; }> = ({ title, children }) => (
@@ -48,6 +48,7 @@ const AgentEditor: React.FC = () => {
     const { state, dispatch } = useAppContext();
     const activeAgent = state.agents.find(a => a.id === state.activeAgentId);
     const subscriptionPlan = state.currentUser?.subscriptionPlan || 'free';
+    const brokerParams = { isPremium: subscriptionPlan === 'pro' };
     
     const [agentData, setAgentData] = useState<Partial<Agent>>(activeAgent || { model: 'gemini-standard', name: 'New Agent', tools: [], coreMemory: [], personality: { tone: 'professional', creativity: 'medium', verbosity: 'balanced' } });
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -95,7 +96,7 @@ const AgentEditor: React.FC = () => {
     
     const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedModel = e.target.value;
-        if (selectedModel === 'gemini-2.5-flash' && subscriptionPlan === 'free') {
+        if (selectedModel === 'gemini-2.5-flash' && !brokerParams.isPremium) {
             dispatch({ type: 'SHOW_TOAST', payload: { message: 'Upgrade to Pro to use premium models!', type: 'info' } });
             return;
         }
@@ -114,10 +115,15 @@ const AgentEditor: React.FC = () => {
 
             Based on these traits, write a detailed persona.
         `;
-
-        const { text } = await generateContent({ prompt });
-        setAgentData({ ...agentData, systemInstruction: text });
-        setIsGeneratingPersona(false);
+        try {
+            const { text } = await generateContent({ prompt }, brokerParams);
+            setAgentData({ ...agentData, systemInstruction: text });
+        } catch (error) {
+             const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+             dispatch({ type: 'SHOW_TOAST', payload: { message: errorMessage, type: 'error' } });
+        } finally {
+            setIsGeneratingPersona(false);
+        }
     };
 
     const handleChatSend = async (e: React.FormEvent) => {
@@ -134,7 +140,7 @@ const AgentEditor: React.FC = () => {
         setChatMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: '', timestamp: new Date().toLocaleTimeString() }]);
 
         try {
-            const stream = await startChatStream(currentInput, agentData.systemInstruction, agentData.id);
+            const stream = await startChatStream(currentInput, agentData.systemInstruction, brokerParams, agentData.id);
             let responseText = '';
             for await (const chunk of stream) {
                 responseText += chunk;
