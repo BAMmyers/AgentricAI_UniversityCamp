@@ -21,7 +21,7 @@ const hashPassword = (password: string) => `hashed_${password}`;
 
 const LoginView: React.FC = () => {
     const { state, dispatch } = useAppContext();
-    const [step, setStep] = useState<'roleSelect' | 'email' | 'setPassword' | 'enterPassword' | 'securityScan'>('roleSelect');
+    const [step, setStep] = useState<'roleSelect' | 'email' | 'setPassword' | 'enterPassword' | 'gatekeeperValidation'>('roleSelect');
     const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -46,20 +46,30 @@ const LoginView: React.FC = () => {
     const handleEmailSubmit = (e: FormEvent) => {
         e.preventDefault();
         setError('');
-        if (!email.trim()) {
+        if (!email.trim() || !selectedRole) {
             setError("Please enter a valid email.");
             return;
         }
-        const userExists = state.users.some(u => u.email.toLowerCase() === email.toLowerCase());
-        if (userExists) {
-            setStep('enterPassword');
+        
+        const userInState = state.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+        if (userInState) {
+            // User exists, check if the role matches
+            if (userInState.role === selectedRole) {
+                // Role matches, proceed to login password step
+                runGatekeeperValidation(() => setStep('enterPassword'));
+            } else {
+                // Role mismatch, show an error and stay on the email step
+                setError(`This email is registered as a ${userInState.role}. Please log in with the correct role.`);
+            }
         } else {
-            setStep('setPassword');
+            // User does not exist, proceed to registration
+            runGatekeeperValidation(() => setStep('setPassword'));
         }
     };
 
-    const runSecurityScan = (callback: () => void) => {
-        setStep('securityScan');
+    const runGatekeeperValidation = (callback: () => void) => {
+        setStep('gatekeeperValidation');
         setTimeout(callback, 1500);
     };
     
@@ -79,16 +89,16 @@ const LoginView: React.FC = () => {
             return;
         }
 
-        runSecurityScan(() => {
-            const newUser: User = {
-                id: `${selectedRole}-${Date.now()}`,
-                email: email,
-                role: selectedRole,
-                subscriptionPlan: selectedRole === 'admin' ? 'pro' : 'free',
-                passwordHash: hashPassword(password),
-            };
-            dispatch({ type: 'REGISTER_USER', payload: newUser });
-            // The reducer automatically logs in the new user and logs the registration event.
+        runGatekeeperValidation(() => {
+            dispatch({
+                type: 'REGISTER_USER',
+                payload: {
+                    email: email,
+                    role: selectedRole,
+                    subscriptionPlan: selectedRole === 'admin' ? 'pro' : 'free',
+                    passwordHash: hashPassword(password),
+                }
+            });
         });
     };
 
@@ -96,30 +106,28 @@ const LoginView: React.FC = () => {
         e.preventDefault();
         setError('');
         
-        runSecurityScan(() => {
+        runGatekeeperValidation(() => {
             const userInState = state.users.find(u => u.email.toLowerCase() === email.toLowerCase());
             
             if (userInState && userInState.passwordHash === hashPassword(password)) {
                 const userPayload: User = { ...userInState };
-                // The LOGIN reducer will log the successful event
                 dispatch({ type: 'LOGIN', payload: { user: userPayload, password } });
             } else {
-                // Manually log the failed attempt
                 dispatch({ type: 'LOG_SECURITY_EVENT', payload: { type: 'LOGIN_FAILURE', details: `Failed login attempt for email: ${email}` } });
                 setError("Invalid email or password. Please try again.");
-                setStep('enterPassword'); // Go back to the password screen
+                setStep('enterPassword'); 
             }
         });
     };
     
     const renderStep = () => {
         switch (step) {
-            case 'securityScan':
+            case 'gatekeeperValidation':
                 return (
                     <div className="text-center animate-fade-in space-y-4 py-8">
                         <ShieldCheckIcon className="w-16 h-16 mx-auto text-brand-cyan animate-pulse"/>
-                        <h2 className="text-xl font-bold text-white">Security Scan in Progress</h2>
-                        <p className="text-sm text-brand-text-secondary">Security Sentinel 001 is verifying credentials...</p>
+                        <h2 className="text-xl font-bold text-white">Gatekeeper Protocol Active</h2>
+                        <p className="text-sm text-brand-text-secondary">Gatekeeper_001 is verifying credentials and routing you to the correct access point...</p>
                     </div>
                 );
             case 'email':
@@ -166,7 +174,7 @@ const LoginView: React.FC = () => {
                 return (
                      <form onSubmit={handleLogin} className="space-y-4 animate-fade-in">
                          <div className="text-center">
-                            <h2 className="text-2xl font-bold text-white">Welcome Back!</h2>
+                            <h2 className="text-2xl font-bold text-white">Welcome Back, {selectedRole && selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}!</h2>
                             <p className="text-sm text-brand-text-secondary">Enter your password for <span className="font-semibold text-brand-text">{email}</span>.</p>
                         </div>
                         <div className="relative">
@@ -196,7 +204,7 @@ const LoginView: React.FC = () => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-brand-dark p-4">
             <div className="w-full max-w-sm">
-                {step !== 'roleSelect' && step !== 'securityScan' && (
+                {step !== 'roleSelect' && step !== 'gatekeeperValidation' && (
                     <button onClick={resetState} className="flex items-center gap-2 text-sm text-brand-text-secondary hover:text-white mb-4">
                         <ArrowUturnLeftIcon className="w-4 h-4" />
                         Back to Role Selection

@@ -6,8 +6,10 @@ import { saveStateToLocalStorage, loadStateFromLocalStorage } from '../utils/sto
 type Action =
   | { type: 'SET_STATE'; payload: AppState }
   | { type: 'LOGIN'; payload: { user: User, password?: string } }
-  | { type: 'REGISTER_USER'; payload: User }
+  | { type: 'REGISTER_USER'; payload: { email: string; passwordHash: string; role: UserRole; subscriptionPlan: SubscriptionPlan; preferences?: Student['preferences'] } }
   | { type: 'LOGOUT' }
+  | { type: 'START_ENROLLMENT' }
+  | { type: 'CANCEL_ENROLLMENT' }
   | { type: 'UPGRADE_PLAN' }
   | { type: 'UPDATE_AGENT'; payload: Agent }
   | { type: 'ADD_AGENT'; payload: Agent }
@@ -81,6 +83,7 @@ const initialState: AppState = {
   securityLog: [],
   liveLectureSession: { isActive: false, attendeeAgentIds: [] },
   curriculum: [],
+  isEnrolling: false,
 };
 
 // Simple hash simulation for the frontend.
@@ -106,26 +109,39 @@ const appReducer = (state: AppState, action: Action): AppState => {
             toasts: [], // Do not persist toasts
             missionPlan: null, // Do not persist mission plans
             systemError: null, // Do not persist errors
+            isEnrolling: false, // Don't persist enrollment state
         };
+    case 'START_ENROLLMENT':
+        return { ...state, isEnrolling: true };
+    case 'CANCEL_ENROLLMENT':
+        return { ...state, isEnrolling: false };
     case 'REGISTER_USER': {
-        const userExists = state.users.some(u => u.email.toLowerCase() === action.payload.email.toLowerCase());
-        if (userExists) return state; // Should not happen with UI flow
+        const { email, passwordHash, role, subscriptionPlan, preferences } = action.payload;
+        const userExists = state.users.some(u => u.email.toLowerCase() === email.toLowerCase());
+        if (userExists) return state;
 
-        const newUser = action.payload;
+        const newUserId = `${role}-${Date.now()}`;
+        const newUser: User = {
+            id: newUserId,
+            email,
+            passwordHash,
+            role,
+            subscriptionPlan,
+        };
 
         let newState: AppState = {
             ...state,
             users: [...state.users, newUser],
             currentUser: newUser,
+            isEnrolling: false, // Close enrollment view on success
             securityLog: [
                 { type: 'USER_REGISTERED', details: `New user registered: ${newUser.email} (Role: ${newUser.role})`, timestamp: new Date().toISOString() },
                 ...state.securityLog
             ],
         };
 
-        // If the new user is a student, create their companion agent and student profile.
-        if (newUser.role === 'student') {
-            const studentId = newUser.id;
+        if (role === 'student' && preferences) {
+            const studentId = newUserId;
             const companionAgentId = `agent-companion-${studentId.slice(-6)}`;
             const newCompanionAgent: Agent = {
                 id: companionAgentId,
@@ -143,7 +159,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
                 id: studentId,
                 companionAgentId: companionAgentId,
                 schedule: [],
-                preferences: { preferredTopics: ['dinosaurs', 'space'], learningStyle: 'visual' },
+                preferences: preferences,
                 parentGoals: [],
                 teacherCurriculum: [],
                 activityLog: [],

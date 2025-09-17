@@ -17,7 +17,8 @@ export type View =
   | 'mission-command'
   | 'teacher-lecture'
   | 'agent-detail'
-  | 'curriculum-manager'; // New view for curriculum management
+  | 'curriculum-manager'
+  | 'student-ui-builder'; // New view for the creator to build the student UI
 
 export type UserRole = 'student' | 'parent' | 'teacher' | 'admin';
 export type SubscriptionPlan = 'free' | 'pro';
@@ -289,4 +290,5 @@ export interface AppState {
   securityLog: SecurityLogEntry[];
   liveLectureSession: LiveLectureSession | null;
   curriculum: CurriculumItem[];
+  isEnrolling: boolean; // Flag to control the enrollment UI
 }

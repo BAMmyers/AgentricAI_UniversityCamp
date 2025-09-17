@@ -13,7 +13,8 @@ import AccountView from './AccountView';
 import SystemOptimizationView from './SystemOptimizationView';
 import SecuritySentinelView from './SecuritySentinelView';
 import MissionCommandView from './MissionCommandView';
-import { BrainCircuitIcon, LayoutDashboardIcon, Cog8ToothIcon, AcademicCapIcon, ServerStackIcon, UserGroupIcon, TrophyIcon, ArrowRightOnRectangleIcon, UserIcon, CreditCardIcon, BoltIcon, ShieldCheckIcon, CommandLineIcon } from './icons';
+import StudentUIBuilderView from './StudentUIBuilderView';
+import { BrainCircuitIcon, LayoutDashboardIcon, Cog8ToothIcon, AcademicCapIcon, ServerStackIcon, UserGroupIcon, TrophyIcon, ArrowRightOnRectangleIcon, UserIcon, CreditCardIcon, BoltIcon, ShieldCheckIcon, CommandLineIcon, SparklesIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 import { View } from '../types/index';
 
@@ -30,6 +31,7 @@ const AdminPortal: React.FC = () => {
     { id: 'security-sentinel', label: 'Security Sentinel', icon: <ShieldCheckIcon className="w-5 h-5" /> },
     { id: 'studio', label: 'Studio', icon: <BrainCircuitIcon className="w-5 h-5" /> },
     { id: 'agent-editor', label: 'Agent Editor', icon: <Cog8ToothIcon className="w-5 h-5" /> },
+    { id: 'student-ui-builder', label: 'Student UI Builder', icon: <SparklesIcon className="w-5 h-5" /> },
     { id: 'gateway', label: 'Gateway', icon: <ServerStackIcon className="w-5 h-5" /> },
     { id: 'system-optimization', label: 'Optimization', icon: <BoltIcon className="w-5 h-5" /> },
   ];
@@ -57,6 +59,8 @@ const AdminPortal: React.FC = () => {
         return <SecuritySentinelView />;
       case 'gateway':
         return <GatewayView />;
+      case 'student-ui-builder':
+        return <StudentUIBuilderView />;
       case 'system-optimization':
         return <SystemOptimizationView />;
       case 'student-roster':
@@ -64,8 +68,6 @@ const AdminPortal: React.FC = () => {
       case 'agent-detail':
         return <AgentDetailView setActiveView={setActiveView} />;
       case 'parent-teacher-console':
-        // This view is now logically separate from the main roster. It can be removed or kept for direct student management.
-        // For now, it's unlinked from the main nav but can be accessed from other parts of the app if needed.
         return activeStudentIdForConsole ? <ParentTeacherConsole studentId={activeStudentIdForConsole} setActiveView={setActiveView} /> : <AgentRoster setActiveView={setActiveView} />;
       case 'showcase':
         return <ShowcaseView />;

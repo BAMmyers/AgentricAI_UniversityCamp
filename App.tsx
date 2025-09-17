@@ -8,14 +8,19 @@ import ToastContainer from './components/Toast';
 import { ChatWidget } from './components/ChatWidget';
 import ErrorBoundary from './components/ErrorBoundary';
 import SystemAnomalyView from './components/SystemAnomalyView';
+import EnrollmentView from './components/EnrollmentView';
 
 const App: React.FC = () => {
   const { state } = useAppContext();
-  const { currentUser, systemError } = state;
+  const { currentUser, systemError, isEnrolling } = state;
 
   const renderPortal = () => {
     if (systemError) {
       return <SystemAnomalyView />;
+    }
+
+    if (isEnrolling) {
+      return <EnrollmentView />;
     }
     
     if (!currentUser) {
@@ -40,7 +45,7 @@ const App: React.FC = () => {
       <ErrorBoundary>
         {renderPortal()}
       </ErrorBoundary>
-      {currentUser && !systemError && <ChatWidget currentUserRole={currentUser.role} />}
+      {currentUser && !systemError && !isEnrolling && <ChatWidget currentUserRole={currentUser.role} />}
       <ToastContainer />
     </div>
   );

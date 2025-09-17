@@ -33,9 +33,8 @@ const InterfaceCard: React.FC<{ icon: React.ReactNode; title: string; children: 
 const StudentView: React.FC<StudentViewProps> = ({ setActiveView }) => {
     const { dispatch } = useAppContext();
 
-    const handleEnroll = () => {
-        dispatch({ type: 'ENROLL_STUDENT' });
-        setActiveView('student-roster');
+    const handleStartEnrollment = () => {
+        dispatch({ type: 'START_ENROLLMENT' });
     };
 
     return (
@@ -91,7 +90,7 @@ const StudentView: React.FC<StudentViewProps> = ({ setActiveView }) => {
                     title="Student Interface" 
                     buttonText="Enroll & Begin Learning"
                     buttonColor="bg-green-600 hover:bg-green-700"
-                    onClick={handleEnroll}
+                    onClick={handleStartEnrollment}
                 >
                     <b>Echo Mode</b> - The private student learning space with symbol-based communication, large touch-friendly buttons, and offline functionality. Designed specifically for AAC devices and neurodiverse learners.
                 </InterfaceCard>
