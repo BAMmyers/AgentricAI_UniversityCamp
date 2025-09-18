@@ -6,7 +6,9 @@ import SecuritySentinelView from './SecuritySentinelView';
 import SystemOptimizationView from './SystemOptimizationView';
 import GatewayView from './GatewayView';
 import Dashboard from './Dashboard';
-import { BrainCircuitIcon, ArrowRightOnRectangleIcon, CommandLineIcon, GroupIcon, ShieldCheckIcon, ServerStackIcon, BoltIcon, LayoutDashboardIcon } from './icons';
+import StudentUIBuilderView from './StudentUIBuilderView';
+import AgentDetailView from './AgentDetailView';
+import { BrainCircuitIcon, ArrowRightOnRectangleIcon, CommandLineIcon, GroupIcon, ShieldCheckIcon, ServerStackIcon, BoltIcon, LayoutDashboardIcon, AcademicCapIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 import { View } from '../types/index';
 
@@ -26,6 +28,7 @@ const AdminPortal: React.FC = () => {
         { id: 'security-sentinel', label: 'Security Sentinel', icon: <ShieldCheckIcon className="w-5 h-5" /> },
         { id: 'gateway', label: 'Gateway Console', icon: <ServerStackIcon className="w-5 h-5" /> },
         { id: 'system-optimization', label: 'System Optimization', icon: <BoltIcon className="w-5 h-5" /> },
+        { id: 'student-ui-builder', label: 'Student UI Builder', icon: <AcademicCapIcon className="w-5 h-5" /> },
     ];
 
     const renderView = () => {
@@ -38,12 +41,16 @@ const AdminPortal: React.FC = () => {
                 return <MissionCommandView />;
             case 'agent-roster':
                 return <AgentRoster setActiveView={setActiveView} />;
+            case 'agent-detail':
+                return <AgentDetailView setActiveView={setActiveView} />;
             case 'security-sentinel':
                 return <SecuritySentinelView />;
             case 'gateway':
                 return <GatewayView />;
             case 'system-optimization':
                 return <SystemOptimizationView />;
+            case 'student-ui-builder':
+                return <StudentUIBuilderView />;
             default:
                 return <Dashboard setActiveView={setActiveView} />;
         }

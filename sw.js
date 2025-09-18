@@ -1,3 +1,4 @@
+
 const CACHE_NAME = 'aau-student-cache-v1';
 const urlsToCache = [
   '/',

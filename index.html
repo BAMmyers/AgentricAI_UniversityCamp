@@ -25,6 +25,20 @@
               'brand-text': '#C9D1D9',
               'brand-text-secondary': '#8B949E',
             },
+            animation: {
+                'fade-in': 'fadeIn 0.5s ease-out forwards',
+                'fade-in-right': 'fadeInRight 0.5s ease-out forwards',
+            },
+            keyframes: {
+                fadeIn: {
+                    '0%': { opacity: 0, transform: 'scale(0.95)' },
+                    '100%': { opacity: 1, transform: 'scale(1)' },
+                },
+                fadeInRight: {
+                    '0%': { opacity: 0, transform: 'translateX(20px)' },
+                    '100%': { opacity: 1, transform: 'translateX(0)' },
+                }
+            }
           },
         },
       }
@@ -46,7 +60,7 @@
 }
 </script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-</head>
+  </head>
   <body class="bg-brand-dark text-brand-text">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>

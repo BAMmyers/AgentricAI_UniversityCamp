@@ -21,7 +21,7 @@ const hashPassword = (password: string) => `hashed_${password}`;
 
 const LoginView: React.FC = () => {
     const { state, dispatch } = useAppContext();
-    const [step, setStep] = useState<'roleSelect' | 'email' | 'setPassword' | 'enterPassword' | 'gatekeeperValidation'>('roleSelect');
+    const [step, setStep] = useState<'roleSelect' | 'email' | 'setPassword' | 'enterPassword' | 'gatekeeperValidation' | 'adminSetupPassword'>('roleSelect');
     const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -54,13 +54,15 @@ const LoginView: React.FC = () => {
         const userInState = state.users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
         if (userInState) {
-            // User exists, check if the role matches
-            if (userInState.role === selectedRole) {
-                // Role matches, proceed to login password step
-                runGatekeeperValidation(() => setStep('enterPassword'));
-            } else {
-                // Role mismatch, show an error and stay on the email step
+             if (userInState.role !== selectedRole) {
                 setError(`This email is registered as a ${userInState.role}. Please log in with the correct role.`);
+                return;
+            }
+            // Check for one-time admin setup
+            if (userInState.role === 'admin' && userInState.passwordHash === 'hashed_adminpass') {
+                 runGatekeeperValidation(() => setStep('adminSetupPassword'));
+            } else {
+                 runGatekeeperValidation(() => setStep('enterPassword'));
             }
         } else {
             // User does not exist, proceed to registration
@@ -101,6 +103,26 @@ const LoginView: React.FC = () => {
             });
         });
     };
+    
+    const handleAdminSetup = (e: FormEvent) => {
+        e.preventDefault();
+        setError('');
+        if (password.length < 8) {
+             setError("Password must be at least 8 characters long.");
+             return;
+        }
+        if (password !== confirmPassword) {
+            setError("Passwords do not match.");
+            return;
+        }
+        
+        runGatekeeperValidation(() => {
+            dispatch({
+                type: 'SETUP_ADMIN_ACCOUNT',
+                payload: { passwordHash: hashPassword(password) }
+            });
+        });
+    };
 
     const handleLogin = (e: FormEvent) => {
         e.preventDefault();
@@ -129,6 +151,24 @@ const LoginView: React.FC = () => {
                         <h2 className="text-xl font-bold text-white">Gatekeeper Protocol Active</h2>
                         <p className="text-sm text-brand-text-secondary">Gatekeeper_001 is verifying credentials and routing you to the correct access point...</p>
                     </div>
+                );
+            case 'adminSetupPassword':
+                 return (
+                    <form onSubmit={handleAdminSetup} className="space-y-4 animate-fade-in">
+                        <div className="text-center">
+                            <h2 className="text-2xl font-bold text-white">First-Time Admin Setup</h2>
+                            <p className="text-sm text-brand-text-secondary">For security, please create a new password for the administrator account.</p>
+                        </div>
+                        <div className="relative">
+                            <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-text-secondary" />
+                            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="New secure password (min 8 chars)" required autoFocus className="w-full bg-brand-gray border border-brand-border rounded-lg p-3 pl-10 text-sm text-brand-text"/>
+                        </div>
+                        <div className="relative">
+                            <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-text-secondary" />
+                            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm new password" required className="w-full bg-brand-gray border border-brand-border rounded-lg p-3 pl-10 text-sm text-brand-text"/>
+                        </div>
+                        <button type="submit" className="w-full p-3 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700">Secure Account & Login</button>
+                    </form>
                 );
             case 'email':
                 return (

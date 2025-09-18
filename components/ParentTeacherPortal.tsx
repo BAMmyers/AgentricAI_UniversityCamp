@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import StudentRoster from './StudentRoster';
+import AgentRoster from './AgentRoster';
 import ParentTeacherConsole from './ParentTeacherConsole';
 import ShowcaseView from './ShowcaseView';
 import AccountView from './AccountView';
@@ -32,11 +32,6 @@ const ParentTeacherPortal: React.FC = () => {
         setActiveView('parent-teacher-console');
     }
     
-    // This function will be passed to the Agent Roster to handle navigation
-    const navigateToAgentDetail = () => {
-        setActiveView('agent-detail');
-    };
-
     const handleLogout = () => {
         dispatch({ type: 'LOGOUT' });
     };
@@ -44,9 +39,9 @@ const ParentTeacherPortal: React.FC = () => {
     const renderView = () => {
         switch (activeView) {
             case 'student-roster':
-                return <StudentRoster navigateToConsole={navigateToConsole} />;
+                return <AgentRoster setActiveView={setActiveView} navigateToConsole={navigateToConsole} />;
             case 'parent-teacher-console':
-                return activeStudentId ? <ParentTeacherConsole studentId={activeStudentId} setActiveView={setActiveView} /> : <StudentRoster navigateToConsole={navigateToConsole} />;
+                return activeStudentId ? <ParentTeacherConsole studentId={activeStudentId} setActiveView={setActiveView} /> : <AgentRoster setActiveView={setActiveView} navigateToConsole={navigateToConsole} />;
             case 'studio':
                 return <AgenticStudio />;
             case 'mission-command':
@@ -62,7 +57,7 @@ const ParentTeacherPortal: React.FC = () => {
             case 'account':
                 return <AccountView />;
             default:
-                return <StudentRoster navigateToConsole={navigateToConsole} />;
+                return <AgentRoster setActiveView={setActiveView} navigateToConsole={navigateToConsole} />;
         }
     };
 

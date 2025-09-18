@@ -1,8 +1,0 @@
-{
-  "requestFramePermissions": [
-    "microphone"
-  ],
-  "name": "AgentricAI Studios",
-  "description": "AgentricAI Studios: A visual, node-based AI agent and workflow environment. powered by Google Technologies.",
-  "prompt": ""
-}

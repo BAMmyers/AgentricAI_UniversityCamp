@@ -1,3 +1,4 @@
+
 import React, { createContext, useReducer, useContext, useEffect } from 'react';
 import { Agent, AppState, Student, ScheduleItem, UpdateStudentGoalsPayload, LogActivityPayload, ShowcasedProject, UpdateStudentProfilePayload, Toast, User, UserRole, SubscriptionPlan, SystemError, SecurityLogEntry, CurriculumItem, Action, LiveLectureSession, MissionPlan, ManifestAgent, MissionStepStatus } from '../types/index';
 import { saveStateToLocalStorage, loadStateFromLocalStorage } from '../utils/storage';
@@ -10,7 +11,7 @@ const initialState: AppState = {
       email: 'agentricaiuiux@gmail.com',
       role: 'admin',
       subscriptionPlan: 'pro',
-      passwordHash: 'hashed_adminpass', // Default password is 'adminpass'
+      passwordHash: 'hashed_adminpass', // Default placeholder password for one-time setup
     }
   ],
   agents: [
@@ -52,13 +53,19 @@ const hashPassword = (password: string) => `hashed_${password}`;
 
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
-    case 'SET_STATE':
+    case 'SET_STATE': {
         const loadedState = action.payload;
+        const initialAdmin = initialState.users.find(u => u.role === 'admin')!;
+        
+        // Failsafe: Ensure the admin user is always pristine on load to prevent lockouts.
+        let users = (loadedState.users || []).filter(u => u.role !== 'admin');
+        users.push(initialAdmin);
+        
         // Ensure all keys are present to prevent runtime errors
         return {
             ...initialState,
             ...loadedState,
-            users: loadedState.users || [],
+            users: users,
             currentUser: loadedState.currentUser || null, // Persist user session
             students: loadedState.students || [],
             activeStudentId: loadedState.activeStudentId || null,
@@ -70,10 +77,28 @@ const appReducer = (state: AppState, action: Action): AppState => {
             systemError: null, // Do not persist errors
             isEnrolling: false, // Don't persist enrollment state
         };
+    }
     case 'START_ENROLLMENT':
         return { ...state, isEnrolling: true };
     case 'CANCEL_ENROLLMENT':
         return { ...state, isEnrolling: false };
+    case 'SETUP_ADMIN_ACCOUNT': {
+        const { passwordHash } = action.payload;
+        const adminUser = state.users.find(u => u.role === 'admin');
+        if (!adminUser) return state; // Should not happen
+
+        const updatedAdmin = { ...adminUser, passwordHash };
+        
+        return {
+            ...state,
+            users: state.users.map(u => u.role === 'admin' ? updatedAdmin : u),
+            currentUser: updatedAdmin, // Log in the admin immediately after setup
+            securityLog: [
+                { type: 'ADMIN_SETUP', details: `Administrator account secured with new password.`, timestamp: new Date().toISOString() },
+                ...state.securityLog
+            ],
+        };
+    }
     case 'REGISTER_USER': {
         const { email, passwordHash, role, subscriptionPlan, preferences } = action.payload;
         const userExists = state.users.some(u => u.email.toLowerCase() === email.toLowerCase());

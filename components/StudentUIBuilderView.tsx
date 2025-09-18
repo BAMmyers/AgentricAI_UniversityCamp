@@ -1,70 +1,60 @@
-import React from 'react';
-import { BookOpenIcon, PaintBrushIcon, StarIcon, SparklesIcon } from './icons';
-
-const Annotation: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className }) => (
-    <div className={`absolute p-2 bg-yellow-500/20 border-2 border-dashed border-yellow-400 rounded-lg text-xs text-yellow-200 ${className}`}>
-        <strong className="block font-bold">{title}</strong>
-        {children}
-    </div>
-);
+import React, { useEffect } from 'react';
+import EchoApp from './echo/EchoApp';
+import { useAppContext } from '../context/AppContext';
+import { SparklesIcon, UserPlusIcon } from './icons';
 
 const StudentUIBuilderView: React.FC = () => {
+    const { state, dispatch } = useAppContext();
+    const { students, activeStudentId } = state;
+
+    // On mount, ensure an active student is set for the preview.
+    // This allows the EchoApp and its hooks to function correctly.
+    useEffect(() => {
+        // If there are no students, create one for the preview.
+        if (students.length === 0) {
+            handleEnrollStudent();
+        } else if (!students.some(s => s.id === activeStudentId)) {
+            // If students exist but none are active, set the first as active.
+            dispatch({ type: 'SET_ACTIVE_STUDENT_ID', payload: students[0].id });
+        }
+    }, [students, activeStudentId, dispatch]);
+
+    const handleEnrollStudent = () => {
+        dispatch({ type: 'ENROLL_STUDENT' });
+        dispatch({ type: 'SHOW_TOAST', payload: { message: 'New sample student enrolled for preview.', type: 'info' } });
+    }
+
     return (
-        <div className="p-6 bg-brand-dark min-h-full">
-            <header className="flex items-center mb-6">
-                <SparklesIcon className="w-8 h-8 mr-3 text-brand-cyan" />
-                <div>
-                    <h1 className="text-2xl font-bold text-white">Student UI Builder</h1>
-                    <p className="text-brand-text-secondary">A read-only preview of the student's "Daily Planner" interface for conceptual refinement.</p>
+        <div className="bg-brand-dark min-h-full flex flex-col">
+            <header className="flex-shrink-0 p-6 bg-brand-gray border-b border-brand-border">
+                <div className="flex items-center">
+                    <SparklesIcon className="w-8 h-8 mr-3 text-brand-cyan" />
+                    <div>
+                        <h1 className="text-2xl font-bold text-white">Student UI Builder</h1>
+                        <p className="text-brand-text-secondary">A live, interactive preview of the student's daily planner experience.</p>
+                    </div>
                 </div>
             </header>
             
-            <div className="relative bg-brand-gray p-6 rounded-lg border border-brand-border">
-                <Annotation title="Main Container" className="-top-4 -left-4">
-                    The entire student view is designed to be immersive, with no complex navigation.
-                </Annotation>
-
-                <header className="flex justify-between items-center mb-8 relative">
-                    <Annotation title="Companion Agent Greeting" className="top-0 -left-4 w-48">
-                        The Companion Agent's identity is front-and-center, acting as the student's guide.
-                    </Annotation>
-                    <div>
-                        <h1 className="text-3xl font-bold text-white">Hello! I'm Tutor</h1>
-                        <p className="text-brand-text-secondary">Here is your plan for today. Let's learn something new!</p>
+            <main className="flex-grow overflow-auto relative bg-black">
+                {students.length > 0 && activeStudentId ? (
+                     <EchoApp />
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-10">
+                        <h2 className="text-xl font-bold text-white">No Students Enrolled</h2>
+                        <p className="text-brand-text-secondary mt-2 mb-4 max-w-md">
+                            The Student UI requires at least one enrolled student to generate a preview schedule. Please enroll a sample student to continue.
+                        </p>
+                        <button 
+                            onClick={handleEnrollStudent}
+                            className="flex items-center gap-2 bg-brand-primary hover:bg-brand-accent text-white font-semibold px-4 py-2 rounded-md"
+                        >
+                            <UserPlusIcon className="w-5 h-5" />
+                            Enroll a Sample Student
+                        </button>
                     </div>
-                </header>
-                
-                <main className="grid grid-cols-2 md:grid-cols-4 gap-6 relative">
-                     <Annotation title="Activity Tiles" className="bottom-1/2 -right-4 w-56">
-                        Each tile represents a `ScheduleItem` generated by the agent. They are large, touch-friendly, and use icons and colors for quick identification. Clicking a tile executes its associated `Workflow`.
-                    </Annotation>
-                    
-                    <div className="relative aspect-square rounded-2xl flex flex-col items-center justify-center text-white font-bold text-2xl p-4 text-center cursor-pointer bg-gradient-to-br from-blue-500 to-cyan-500">
-                        <div className="transform scale-150"><BookOpenIcon className="w-16 h-16" /></div>
-                        <span className="mt-4 text-xl">Today's Story</span>
-                    </div>
-
-                    <div className="relative aspect-square rounded-2xl flex flex-col items-center justify-center text-white font-bold text-2xl p-4 text-center cursor-pointer bg-gradient-to-br from-red-500 to-orange-500">
-                        <div className="transform scale-150"><PaintBrushIcon className="w-16 h-16" /></div>
-                        <span className="mt-4 text-xl">Art Idea</span>
-                    </div>
-                    
-                    <div className="relative aspect-square rounded-2xl flex flex-col items-center justify-center text-white font-bold text-2xl p-4 text-center cursor-pointer bg-gradient-to-br from-yellow-400 to-orange-500">
-                        <span className="absolute top-2 right-2 text-xs bg-black/50 px-2 py-0.5 rounded-full">Join Live!</span>
-                        <div className="transform scale-150"><StarIcon className="w-16 h-16" /></div>
-                        <span className="mt-4 text-xl">Live Seminar</span>
-                    </div>
-                    
-                    <div className="relative aspect-square rounded-2xl flex flex-col items-center justify-center text-white font-bold text-2xl p-4 text-center cursor-pointer bg-gradient-to-br from-purple-500 to-indigo-600 opacity-50">
-                        <div className="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center font-bold text-3xl">DONE!</div>
-                        <div className="transform scale-150"><SparklesIcon className="w-16 h-16" /></div>
-                        <span className="mt-4 text-xl">Completed Task</span>
-                         <Annotation title="Completed State" className="-bottom-4 -right-4 w-48">
-                            Completed activities are visually distinct, providing a sense of accomplishment.
-                        </Annotation>
-                    </div>
-                </main>
-            </div>
+                )}
+            </main>
         </div>
     );
 };

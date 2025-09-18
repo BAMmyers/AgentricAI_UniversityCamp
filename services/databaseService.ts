@@ -1,6 +1,6 @@
 import initSqlJs from 'sql.js';
 import type { SqlJsStatic } from 'sql.js';
-import type { SavedWorkflow, DynamicNodeConfig, NodeData, Edge } from '../types/index';
+import type { SavedWorkflow, DynamicNodeConfig, NodeData, Edge, LlmServiceConfig } from '../types/index';
 
 const DB_NAME = 'agentic-studio-db';
 
@@ -63,6 +63,10 @@ class DatabaseService {
             CREATE TABLE IF NOT EXISTS custom_agents (
                 name TEXT PRIMARY KEY,
                 config TEXT
+            );
+            CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY,
+                value TEXT
             );
         `);
         this.persist();
@@ -153,6 +157,30 @@ class DatabaseService {
             }
         }
         return [];
+    }
+
+    async saveLlmConfig(config: LlmServiceConfig): Promise<void> {
+        await this.ensureDb();
+        const stmt = this.db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
+        stmt.run(['llm_config', JSON.stringify(config)]);
+        stmt.free();
+        this.persist();
+    }
+
+    async loadLlmConfig(): Promise<LlmServiceConfig | null> {
+        await this.ensureDb();
+        const stmt = this.db.prepare("SELECT value FROM settings WHERE key = 'llm_config'");
+        const result = stmt.getAsObject();
+        stmt.free();
+        if (result.value) {
+            try {
+                return JSON.parse(result.value as string);
+            } catch (e) {
+                console.error("Failed to parse LLM config from database.", e);
+                return null;
+            }
+        }
+        return null;
     }
 }
 

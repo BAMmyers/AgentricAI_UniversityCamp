@@ -341,6 +341,7 @@ export type Action =
   | { type: 'SET_STATE'; payload: AppState }
   | { type: 'LOGIN'; payload: { user: User, password?: string } }
   | { type: 'REGISTER_USER'; payload: { email: string; passwordHash: string; role: UserRole; subscriptionPlan: SubscriptionPlan; preferences?: Student['preferences'] } }
+  | { type: 'SETUP_ADMIN_ACCOUNT'; payload: { passwordHash: string } }
   | { type: 'LOGOUT' }
   | { type: 'START_ENROLLMENT' }
   | { type: 'CANCEL_ENROLLMENT' }
@@ -380,7 +381,8 @@ export type SecurityEventType =
   | 'LOGIN_SUCCESS' 
   | 'LOGIN_FAILURE' 
   | 'LOGOUT' 
-  | 'USER_REGISTERED' 
+  | 'USER_REGISTERED'
+  | 'ADMIN_SETUP'
   | 'SYSTEM_ERROR_DETECTED'
   | 'INTEGRITY_SCAN_STARTED'
   | 'INTEGRITY_SCAN_COMPLETED';

@@ -14,6 +14,7 @@ import { prelimNodes, prelimEdges } from '../core/prelim-test-data';
 import Sidebar from './sidebar/Sidebar';
 import DefineNodeModal from './modals/DefineNodeModal';
 import { securityService } from '../services/securityService';
+import LlmSettingsModal from './modals/LlmSettingsModal';
 
 const createPortsFromDefinitions = (portDefs: DynamicNodeConfig['inputs'] | DynamicNodeConfig['outputs'], type: 'input' | 'output'): Port[] => {
   return portDefs.map((def: Omit<Port, 'type' | 'id'> & { id?: string }, index) => ({
@@ -33,6 +34,7 @@ const AgenticStudio: React.FC = () => {
   const [availableAgents, setAvailableAgents] = useState<DynamicNodeConfig[]>([]);
   
   const [showDefineNodeModal, setShowDefineNodeModal] = useState(false);
+  const [showLlmSettingsModal, setShowLlmSettingsModal] = useState(false);
   const [environment, setEnvironment] = useState<Environment>('studio');
   const [executionRuntime, setExecutionRuntime] = useState<ExecutionRuntime>('native');
   const [aiMode, setAiMode] = useState<AiMode>('agent');
@@ -85,6 +87,12 @@ const AgenticStudio: React.FC = () => {
         await mechanicService.init();
         await databaseService.init();
         
+        const storedConfig = await databaseService.loadLlmConfig();
+        if (storedConfig) {
+            llmService.setConfiguration(storedConfig);
+            setLlmConfig(storedConfig);
+        }
+
         const storedWorkflows = await databaseService.loadWorkflows();
         if(storedWorkflows) { setSavedWorkflows(storedWorkflows); }
 
@@ -196,7 +204,6 @@ const AgenticStudio: React.FC = () => {
         const execFn = staticNodeLogics[node.type] ?? (node.isDynamic ? executeDynamicNode : null);
         if (!execFn) throw new Error(`Execution logic not found for type: ${node.type}`);
         
-        // FIX: The third argument to execFn must be a boolean indicating if it's a sandbox environment.
         const result = await execFn(node, llmService, environment === 'sandbox');
         execTime = `${((performance.now() - startTime) / 1000).toFixed(2)}s`;
 
@@ -217,8 +224,6 @@ const AgenticStudio: React.FC = () => {
     } finally {
         updateNodeInternalState(nodeId, {}, finalStatus, errorMessage, execTime);
         if (!isWorkflowRunning) setHighlightedNodeId(null);
-        // FIX: The status for ExecutionHistoryEntry must be 'success' or 'error'.
-        // Create a new variable with the correct type to satisfy TypeScript.
         const historyEntryStatus: 'success' | 'error' = finalStatus === 'success' ? 'success' : 'error';
         setExecutionHistory(prev => [{ id: `${nodeId}-${Date.now()}`, nodeName: node.name || 'Unknown', nodeIcon: node.icon || '⚙️', status: historyEntryStatus, timestamp: new Date().toISOString(), executionTime: execTime, error: errorMessage }, ...prev]);
     }
@@ -268,7 +273,9 @@ const AgenticStudio: React.FC = () => {
 
   const handleSaveLlmSettings = (config: LlmServiceConfig) => {
     llmService.setConfiguration(config);
+    databaseService.saveLlmConfig(config);
     setLlmConfig(llmService.getConfiguration());
+    setShowLlmSettingsModal(false);
   };
 
   return (
@@ -278,7 +285,7 @@ const AgenticStudio: React.FC = () => {
           availableAgents={availableAgents} executionHistory={executionHistory} setExecutionHistory={setExecutionHistory}
           savedWorkflows={savedWorkflows} currentWorkflowName={currentWorkflowName} setCurrentWorkflowName={setCurrentWorkflowName}
           onSave={handleSaveWorkflow} onLoad={handleLoadWorkflow} onDelete={handleDeleteWorkflow}
-          llmConfig={llmConfig} onLlmSettingsSave={handleSaveLlmSettings} hasApiKey={!!GEMINI_API_KEY}
+          onOpenLlmSettings={() => setShowLlmSettingsModal(true)} hasApiKey={!!GEMINI_API_KEY}
           environment={environment} setEnvironment={setEnvironment} executionRuntime={executionRuntime} setExecutionRuntime={setExecutionRuntime}
           aiMode={aiMode} setAiMode={setAiMode} contextMemory={contextMemory} setContextMemory={setContextMemory}
           onDefineAgent={() => setShowDefineNodeModal(true)} onClearCanvas={() => { setNodes([]); setEdges([]); pushToHistory([], []); }}
@@ -293,13 +300,13 @@ const AgenticStudio: React.FC = () => {
               highlightedNodeId={highlightedNodeId} activeDrawingToolNodeId={activeDrawingToolNodeId} 
               setActiveDrawingToolNodeId={setActiveDrawingToolNodeId} isWorkflowRunning={isWorkflowRunning}
               onInteractionEnd={handleInteractionEnd} onAddNode={onAddNode} appMode={environment}
-              // FIX: Provide a function that matches the expected signature (nodeId: string) => Promise<void>.
               onRequestReview={async (nodeId: string) => {}}
             />
         </div>
       </main>
       <MechanicStatus />
       {showDefineNodeModal && <DefineNodeModal isOpen={showDefineNodeModal} onClose={() => setShowDefineNodeModal(false)} onDefine={handleDefineNode} isSandbox={environment === 'sandbox'} />}
+      {showLlmSettingsModal && <LlmSettingsModal isOpen={showLlmSettingsModal} onClose={() => setShowLlmSettingsModal(false)} onSave={handleSaveLlmSettings} initialConfig={llmConfig} />}
     </div>
   );
 };
